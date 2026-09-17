@@ -1,0 +1,69 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+
+    # The build prerenders pages from the CMS, so it needs a real database.
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: kianbehsaz
+          POSTGRES_PASSWORD: kianbehsaz
+          POSTGRES_DB: kianbehsaz
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U kianbehsaz"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      NEXT_PUBLIC_SITE_URL: http://localhost:3000
+      DATABASE_URI: postgres://kianbehsaz:kianbehsaz@localhost:5432/kianbehsaz
+      DATABASE_URL: postgres://kianbehsaz:kianbehsaz@localhost:5432/kianbehsaz?schema=app
+      PAYLOAD_SECRET: ci-secret-not-used-in-production
+      REVALIDATE_SECRET: ci-revalidate-secret
+      IP_HASH_SALT: ci-salt
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Create database schemas
+        run: |
+          PGPASSWORD=kianbehsaz psql -h localhost -U kianbehsaz -d kianbehsaz \
+            -c "CREATE SCHEMA IF NOT EXISTS cms; CREATE SCHEMA IF NOT EXISTS app;"
+
+      - name: Apply migrations
+        run: |
+          npx prisma migrate deploy
+          npx payload migrate
+
+      - name: Check the generated Payload types are current
+        run: |
+          npm run generate:types
+          git diff --exit-code src/payload-types.ts
+
+      - run: npm run lint
+
+      - run: npm run typecheck
+
+      - run: npm run build

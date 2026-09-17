@@ -1,0 +1,15 @@
+node_modules
+.next
+.git
+.github
+.env
+.env.*
+!.env.example
+public/media
+deploy/nginx/certs
+*.log
+coverage
+.vscode
+.idea
+README.md
+docs

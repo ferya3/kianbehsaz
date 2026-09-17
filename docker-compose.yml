@@ -1,0 +1,63 @@
+name: kian-behsaz
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-kianbehsaz}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-kianbehsaz}
+      POSTGRES_DB: ${POSTGRES_DB:-kianbehsaz}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./deploy/postgres/init:/docker-entrypoint-initdb.d:ro
+    # Not published to the host: only the app network can reach the database.
+    expose:
+      - '5432'
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-kianbehsaz}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build:
+      context: .
+      args:
+        NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-http://localhost:3000}
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-http://localhost:3000}
+      DATABASE_URI: postgres://${POSTGRES_USER:-kianbehsaz}:${POSTGRES_PASSWORD:-kianbehsaz}@postgres:5432/${POSTGRES_DB:-kianbehsaz}
+      DATABASE_URL: postgres://${POSTGRES_USER:-kianbehsaz}:${POSTGRES_PASSWORD:-kianbehsaz}@postgres:5432/${POSTGRES_DB:-kianbehsaz}?schema=app
+      PAYLOAD_SECRET: ${PAYLOAD_SECRET:?PAYLOAD_SECRET must be set}
+      REVALIDATE_SECRET: ${REVALIDATE_SECRET:?REVALIDATE_SECRET must be set}
+      IP_HASH_SALT: ${IP_HASH_SALT:?IP_HASH_SALT must be set}
+    volumes:
+      # Uploaded media survives a container rebuild. Move this to object
+      # storage before running more than one app container.
+      - media:/app/public/media
+    expose:
+      - '3000'
+
+  nginx:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    depends_on:
+      - app
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - ./deploy/nginx/kianbehsaz.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./deploy/nginx/proxy_params.conf:/etc/nginx/proxy_params.conf:ro
+      - ./deploy/nginx/certs:/etc/nginx/certs:ro
+      - media:/var/www/media:ro
+
+volumes:
+  postgres-data:
+  media:

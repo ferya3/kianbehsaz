@@ -1,0 +1,176 @@
+@import 'tailwindcss';
+
+/* ---------------------------------------------------------------------------
+ * Design tokens
+ *
+ * Tailwind v4 is configured in CSS rather than in tailwind.config.ts. Every
+ * token declared in @theme becomes a utility (bg-brand-700, text-accent-500,
+ * rounded-card …) and a CSS variable, so the same scale is available to
+ * arbitrary CSS without a second source of truth.
+ * ------------------------------------------------------------------------ */
+@theme {
+  /* Brand: graphite/steel — the structural colour of the site. */
+  --color-brand-50: #f4f6f8;
+  --color-brand-100: #e5e9ee;
+  --color-brand-200: #cbd4dd;
+  --color-brand-300: #a4b3c3;
+  --color-brand-400: #768ca3;
+  --color-brand-500: #587089;
+  --color-brand-600: #465a71;
+  --color-brand-700: #3a495c;
+  --color-brand-800: #333e4e;
+  --color-brand-900: #1e2733;
+  --color-brand-950: #131a22;
+
+  /* Accent: fired clay — used for CTAs and for one detail per section. */
+  --color-accent-50: #fdf5f0;
+  --color-accent-100: #fae7db;
+  --color-accent-200: #f4cbb6;
+  --color-accent-300: #eca787;
+  --color-accent-400: #e27b55;
+  --color-accent-500: #d95c33;
+  --color-accent-600: #c24626;
+  --color-accent-700: #a13620;
+  --color-accent-800: #832e20;
+  --color-accent-900: #6c291e;
+  --color-accent-950: #3a120c;
+
+  --color-surface: #ffffff;
+  --color-surface-muted: #f6f7f9;
+  --color-surface-inverse: var(--color-brand-950);
+
+  --font-sans: var(--font-app-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-app-display), var(--font-app-sans), ui-sans-serif, sans-serif;
+
+  --radius-card: 0.75rem;
+  --radius-pill: 9999px;
+
+  --shadow-card: 0 1px 2px rgb(19 26 34 / 0.04), 0 8px 24px -12px rgb(19 26 34 / 0.18);
+  --shadow-raised: 0 2px 4px rgb(19 26 34 / 0.06), 0 16px 40px -16px rgb(19 26 34 / 0.24);
+
+  /* Section rhythm. Every Section component uses one of these. */
+  --spacing-section: 5rem;
+  --spacing-section-lg: 7rem;
+}
+
+/* ---------------------------------------------------------------------------
+ * Base
+ * ------------------------------------------------------------------------ */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--color-surface);
+    color: var(--color-brand-900);
+    font-family: var(--font-sans);
+    /* Persian and Arabic text sits better with slightly looser leading. */
+    line-height: 1.75;
+    text-rendering: optimizeLegibility;
+  }
+
+  :is(h1, h2, h3, h4) {
+    font-family: var(--font-display);
+    line-height: 1.25;
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  /* Persian digits render inconsistently across fonts inside tabular data;
+   * force the latin set in tables so specification columns line up. */
+  table {
+    font-variant-numeric: tabular-nums;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-accent-500);
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background-color: var(--color-accent-200);
+    color: var(--color-brand-950);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * Utilities
+ * ------------------------------------------------------------------------ */
+@utility container-page {
+  width: 100%;
+  margin-inline: auto;
+  padding-inline: 1rem;
+  max-width: 80rem;
+
+  @media (width >= 48rem) {
+    padding-inline: 2rem;
+  }
+}
+
+/* Long-form CMS content. Deliberately small: rich text should look like the
+ * rest of the site, not like a second design system. */
+@utility prose-content {
+  & > * + * {
+    margin-block-start: 1.25em;
+  }
+
+  & h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-block-start: 2em;
+  }
+
+  & h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-block-start: 1.75em;
+  }
+
+  & ul,
+  & ol {
+    padding-inline-start: 1.5rem;
+  }
+
+  & ul {
+    list-style: disc;
+  }
+
+  & ol {
+    list-style: decimal;
+  }
+
+  & a {
+    color: var(--color-accent-700);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  & blockquote {
+    border-inline-start: 3px solid var(--color-accent-400);
+    padding-inline-start: 1rem;
+    color: var(--color-brand-600);
+  }
+
+  & img {
+    border-radius: var(--radius-card);
+  }
+}

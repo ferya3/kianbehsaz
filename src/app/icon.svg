@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="Kian Behsaz">
+  <rect width="32" height="32" rx="6" fill="#1e2733"/>
+  <!-- Three courses of brickwork: the company's product, reduced to a mark. -->
+  <g fill="#d95c33">
+    <rect x="6" y="8" width="9" height="4.5" rx="1"/>
+    <rect x="17" y="8" width="9" height="4.5" rx="1"/>
+    <rect x="6" y="14" width="20" height="4.5" rx="1"/>
+    <rect x="6" y="20" width="9" height="4.5" rx="1"/>
+    <rect x="17" y="20" width="9" height="4.5" rx="1"/>
+  </g>
+</svg>

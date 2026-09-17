@@ -1,0 +1,81 @@
+// Operational tables owned by the application.
+//
+// Payload owns the `cms` schema in this same database (see
+// src/payload.config.ts). Keeping lead data out of the CMS means a compromised
+// editor account cannot read the sales pipeline, and a CMS migration cannot
+// touch it either.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// The connection URL lives in prisma.config.ts (CLI) and in the driver
+// adapter (runtime) — see src/lib/db/prisma.ts.
+datasource db {
+  provider = "postgresql"
+  schemas  = ["app"]
+}
+
+enum ContactStatus {
+  NEW
+  IN_PROGRESS
+  ANSWERED
+  SPAM
+  ARCHIVED
+
+  @@schema("app")
+}
+
+model ContactRequest {
+  id      String        @id @default(cuid())
+  name    String        @db.VarChar(120)
+  email   String        @db.VarChar(180)
+  phone   String?       @db.VarChar(24)
+  company String?       @db.VarChar(160)
+  subject String        @db.VarChar(160)
+  message String        @db.Text
+  locale  String        @db.VarChar(5)
+  status  ContactStatus @default(NEW)
+
+  /// SHA-256 of (IP + IP_HASH_SALT). Enough to rate limit and to spot abuse,
+  /// not enough to re-identify a visitor once the salt is rotated.
+  ipHash    String? @map("ip_hash") @db.VarChar(64)
+  userAgent String? @map("user_agent") @db.VarChar(512)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([status, createdAt])
+  @@index([createdAt])
+  @@map("contact_requests")
+  @@schema("app")
+}
+
+model NewsletterSubscriber {
+  id             String    @id @default(cuid())
+  email          String    @unique @db.VarChar(180)
+  locale         String    @db.VarChar(5)
+  confirmedAt    DateTime? @map("confirmed_at")
+  unsubscribedAt DateTime? @map("unsubscribed_at")
+  ipHash         String?   @map("ip_hash") @db.VarChar(64)
+  createdAt      DateTime  @default(now()) @map("created_at")
+
+  @@index([createdAt])
+  @@map("newsletter_subscribers")
+  @@schema("app")
+}
+
+/// Append-only record of privileged actions, kept for incident review.
+model AuditLog {
+  id        String   @id @default(cuid())
+  action    String   @db.VarChar(80)
+  entity    String?  @db.VarChar(80)
+  entityId  String?  @map("entity_id") @db.VarChar(80)
+  actor     String?  @db.VarChar(180)
+  metadata  Json?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([action, createdAt])
+  @@map("audit_log")
+  @@schema("app")
+}
