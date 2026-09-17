@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useTranslations } from 'next-intl'
 import { Link, usePathname } from '@/lib/i18n/navigation'
 import { LocaleSwitcher } from './LocaleSwitcher'
@@ -26,6 +27,40 @@ export function MobileNav({ items }: { items: { href: string; label: string }[] 
       document.body.style.overflow = ''
     }
   }, [open])
+
+  /**
+   * Rendered through a portal rather than inline.
+   *
+   * The header carries `backdrop-blur`, and an element with a backdrop-filter
+   * becomes the containing block for its `fixed` descendants — so a panel
+   * rendered inside the header would be sized against the 4.5rem header box,
+   * not the viewport, and collapse to nothing.
+   */
+  const panel = (
+    <div
+      id="mobile-nav"
+      className="fixed inset-x-0 top-18 bottom-0 z-50 overflow-y-auto border-t border-brand-100 bg-surface px-4 py-6 lg:hidden"
+    >
+      <nav aria-label={t('menu')}>
+        <ul className="flex flex-col gap-1">
+          {items.map((item) => (
+            <li key={item.href}>
+              <Link
+                href={item.href}
+                className="block rounded-card px-4 py-3 text-base font-medium text-brand-800 hover:bg-brand-50"
+              >
+                {item.label}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </nav>
+
+      <div className="mt-6 border-t border-brand-100 pt-6">
+        <LocaleSwitcher />
+      </div>
+    </div>
+  )
 
   return (
     <div className="lg:hidden">
@@ -56,31 +91,9 @@ export function MobileNav({ items }: { items: { href: string; label: string }[] 
         </span>
       </button>
 
-      {open ? (
-        <div
-          id="mobile-nav"
-          className="fixed inset-x-0 top-18 bottom-0 z-40 overflow-y-auto border-t border-brand-100 bg-surface px-4 py-6"
-        >
-          <nav aria-label={t('menu')}>
-            <ul className="flex flex-col gap-1">
-              {items.map((item) => (
-                <li key={item.href}>
-                  <Link
-                    href={item.href}
-                    className="block rounded-card px-4 py-3 text-base font-medium text-brand-800 hover:bg-brand-50"
-                  >
-                    {item.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </nav>
-
-          <div className="mt-6 border-t border-brand-100 pt-6">
-            <LocaleSwitcher />
-          </div>
-        </div>
-      ) : null}
+      {/* `open` can only become true from a click, so this never runs during
+          server rendering and `document.body` is always present here. */}
+      {open ? createPortal(panel, document.body) : null}
     </div>
   )
 }

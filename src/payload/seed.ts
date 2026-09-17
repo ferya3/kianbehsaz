@@ -122,6 +122,40 @@ async function main() {
     return doc.id
   }
 
+  /** Ids of the rows already stored in an array field, in order. */
+  const arrayRowIds = async (
+    collection: SeedCollection,
+    slug: string,
+    field: string,
+  ): Promise<(string | undefined)[]> => {
+    const result = await payload.find({
+      collection,
+      where: { slug: { equals: slug } },
+      limit: 1,
+      depth: 0,
+    })
+
+    const rows = (result.docs[0] as Record<string, unknown> | undefined)?.[field]
+    if (!Array.isArray(rows)) return []
+
+    return rows.map((row) => (row as { id?: string | null }).id ?? undefined)
+  }
+
+  /** Same, for an array field on a global. */
+  const globalRowIds = async (
+    slug: 'site-settings' | 'home-page' | 'careers',
+    field: string,
+  ): Promise<(string | undefined)[]> => {
+    const doc = (await payload.findGlobal({ slug, depth: 0 })) as unknown as Record<
+      string,
+      unknown
+    >
+    const rows = doc[field]
+    if (!Array.isArray(rows)) return []
+
+    return rows.map((row) => (row as { id?: string | null }).id ?? undefined)
+  }
+
   /* ---------------------------------------------------------------- users */
 
   const adminEmail = 'admin@kianbehsaz.local'
@@ -241,6 +275,15 @@ async function main() {
   ]
 
   for (const [index, product] of products.entries()) {
+    /**
+     * Array rows are shared across locales and identified by id; only the
+     * fields marked `localized` differ per language. Writing rows without an
+     * id replaces the whole array, which would discard the previous locale's
+     * translations — so the first pass creates the rows and later passes
+     * address them by id.
+     */
+    let specIds: (string | undefined)[] = []
+
     for (const locale of LOCALES) {
       await upsert(
         'products',
@@ -253,7 +296,8 @@ async function main() {
           status: 'published',
           featured: true,
           sortOrder: index,
-          specifications: product.specs.map((spec) => ({
+          specifications: product.specs.map((spec, row) => ({
+            id: specIds[row],
             label: spec.label[locale],
             value: spec.value,
             unit: spec.unit,
@@ -261,6 +305,10 @@ async function main() {
         },
         locale,
       )
+
+      if (!specIds.length) {
+        specIds = await arrayRowIds('products', product.slug, 'specifications')
+      }
     }
   }
 
@@ -377,6 +425,21 @@ async function main() {
     ar: 'مواد بناء هندسية',
   }
 
+  const salesLabel: Translated = { fa: 'فروش', en: 'Sales', ar: 'المبيعات' }
+  const statLabels: Translated[] = [
+    { fa: 'سال تجربه', en: 'Years of experience', ar: 'سنة خبرة' },
+    { fa: 'پروژه اجراشده', en: 'Completed projects', ar: 'مشروع منجز' },
+    { fa: 'تن ظرفیت سالانه', en: 'Tonnes annual capacity', ar: 'طن طاقة سنوية' },
+    { fa: 'کارفرمای فعال', en: 'Active clients', ar: 'عميل نشط' },
+  ]
+  const statValues = ['20+', '450+', '120k', '80+']
+
+  // Same array-row rule as products: keep the row ids stable across locales,
+  // or each pass replaces the rows and drops the previous translations.
+  let phoneIds: (string | undefined)[] = []
+  let emailIds: (string | undefined)[] = []
+  let statIds: (string | undefined)[] = []
+
   for (const locale of LOCALES) {
     await payload.updateGlobal({
       slug: 'site-settings',
@@ -384,22 +447,32 @@ async function main() {
       data: {
         siteName: siteNames[locale],
         tagline: taglines[locale],
+        defaultSeoDescription: {
+          fa: 'کیان بهساز تولیدکننده مصالح ساختمانی مهندسی‌شده برای پروژه‌های صنعتی، تجاری و مسکونی است.',
+          en: 'Kian Behsaz manufactures engineered building materials for industrial, commercial and residential projects.',
+          ar: 'تنتج كيان بهساز مواد بناء هندسية للمشاريع الصناعية والتجارية والسكنية.',
+        }[locale],
         address: { fa: 'ایران، تهران', en: 'Tehran, Iran', ar: 'طهران، إيران' }[locale],
         openingHours: {
           fa: 'شنبه تا چهارشنبه، ۸ تا ۱۷',
           en: 'Saturday to Wednesday, 08:00–17:00',
           ar: 'السبت إلى الأربعاء، ٨:٠٠–١٧:٠٠',
         }[locale],
-        phones: [{ label: { fa: 'فروش', en: 'Sales', ar: 'المبيعات' }[locale], number: '+98 21 0000 0000' }],
-        emails: [{ label: { fa: 'فروش', en: 'Sales', ar: 'المبيعات' }[locale], address: 'info@kianbehsaz.com' }],
-        stats: [
-          { value: '20+', label: { fa: 'سال تجربه', en: 'Years of experience', ar: 'سنة خبرة' }[locale] },
-          { value: '450+', label: { fa: 'پروژه اجراشده', en: 'Completed projects', ar: 'مشروع منجز' }[locale] },
-          { value: '120k', label: { fa: 'تن ظرفیت سالانه', en: 'Tonnes annual capacity', ar: 'طن طاقة سنوية' }[locale] },
-          { value: '80+', label: { fa: 'کارفرمای فعال', en: 'Active clients', ar: 'عميل نشط' }[locale] },
-        ],
+        phones: [{ id: phoneIds[0], label: salesLabel[locale], number: '+98 21 0000 0000' }],
+        emails: [{ id: emailIds[0], label: salesLabel[locale], address: 'info@kianbehsaz.com' }],
+        stats: statValues.map((value, row) => ({
+          id: statIds[row],
+          value,
+          label: statLabels[row]![locale],
+        })),
       },
     })
+
+    if (!statIds.length) {
+      phoneIds = await globalRowIds('site-settings', 'phones')
+      emailIds = await globalRowIds('site-settings', 'emails')
+      statIds = await globalRowIds('site-settings', 'stats')
+    }
   }
 
   payload.logger.info('Seed complete.')
