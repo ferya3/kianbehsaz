@@ -24,7 +24,7 @@ export async function Breadcrumbs({
 
   return (
     <>
-      <nav aria-label={t('breadcrumb')} className="text-sm text-brand-500">
+      <nav aria-label={t('breadcrumb')} className="label-mono">
         <ol className="flex flex-wrap items-center gap-x-2 gap-y-1">
           {trail.map((crumb, index) => {
             const isLast = index === trail.length - 1
@@ -32,16 +32,16 @@ export async function Breadcrumbs({
             return (
               <li key={crumb.href} className="flex items-center gap-2">
                 {isLast ? (
-                  <span aria-current="page" className="text-brand-700">
+                  <span aria-current="page" className="text-ink-200">
                     {crumb.name}
                   </span>
                 ) : (
-                  <Link href={crumb.href} className="transition-colors hover:text-brand-800">
+                  <Link href={crumb.href} className="transition-colors hover:text-ink-100">
                     {crumb.name}
                   </Link>
                 )}
                 {!isLast ? (
-                  <span aria-hidden="true" className="text-brand-300 rtl:rotate-180">
+                  <span aria-hidden="true" className="text-ink-600 rtl:rotate-180">
                     ›
                   </span>
                 ) : null}

@@ -7,10 +7,11 @@ import { routing } from '@/lib/i18n/routing'
 import type { Locale } from '@/lib/i18n/config'
 import { buildMetadata } from '@/lib/seo/metadata'
 import { getCatalogs } from '@/lib/cms/queries'
-import { PageHeader } from '@/components/shared/PageHeader'
+import { PageHero } from '@/components/shared/PageHero'
 import { Section } from '@/components/ui/Section'
 import { EmptyState } from '@/components/shared/EmptyState'
-import { Badge } from '@/components/ui/Badge'
+import { Tag } from '@/components/ui/Tag'
+import { Reveal } from '@/components/motion/Reveal'
 
 type Props = { params: Promise<{ locale: string }> }
 
@@ -52,8 +53,9 @@ export default async function CatalogsPage({ params }: Props) {
 
   return (
     <>
-      <PageHeader
+      <PageHero
         locale={typedLocale}
+        index="06"
         title={t('title')}
         subtitle={t('subtitle')}
         breadcrumbs={[{ name: tNav('catalogs'), href: '/catalogs' }]}
@@ -61,42 +63,43 @@ export default async function CatalogsPage({ params }: Props) {
 
       <Section>
         {catalogs.length ? (
-          <ul className="grid gap-4 md:grid-cols-2">
-            {catalogs.map((catalog) => (
-              <li key={catalog.id}>
-                <a
-                  href={catalog.url ?? '#'}
-                  download
-                  className="flex h-full flex-col justify-between gap-4 rounded-card border border-brand-100 bg-surface p-6 shadow-card transition-shadow hover:shadow-raised"
-                >
-                  <div>
-                    <div className="flex items-start justify-between gap-4">
-                      <h2 className="text-lg font-semibold text-brand-900">{catalog.title}</h2>
-                      {catalog.category ? <Badge>{catalog.category}</Badge> : null}
-                    </div>
-                    {catalog.description ? (
-                      <p className="mt-2 text-sm text-brand-600">{catalog.description}</p>
-                    ) : null}
-                  </div>
+          <ul>
+            {catalogs.map((catalog, index) => (
+              <li key={catalog.id} className="rule-hairline last:border-b last:border-white/10">
+                <Reveal delay={Math.min(index, 5) * 0.05}>
+                  <a
+                    href={catalog.url ?? '#'}
+                    download
+                    className="group grid grid-cols-[auto_1fr] items-baseline gap-x-6 gap-y-3 py-7 lg:grid-cols-[auto_1fr_auto_auto]"
+                  >
+                    <span className="label-mono">{String(index + 1).padStart(2, '0')}</span>
 
-                  <dl className="flex flex-wrap items-center gap-x-6 gap-y-1 text-xs text-brand-500">
-                    {catalog.filesize ? (
-                      <div className="flex gap-1">
-                        <dt>{t('fileSize')}:</dt>
-                        <dd dir="ltr">{Math.round(catalog.filesize / 1024)} KB</dd>
-                      </div>
-                    ) : null}
-                    <div className="flex gap-1">
-                      <dt>{t('updatedAt')}:</dt>
-                      <dd>
-                        {format.dateTime(new Date(catalog.updatedAt), { dateStyle: 'medium' })}
-                      </dd>
+                    <div>
+                      <h2 className="text-2xl font-semibold text-ink-200 transition-colors group-hover:text-ink-50">
+                        {catalog.title}
+                      </h2>
+                      {catalog.description ? (
+                        <p className="mt-2 max-w-xl text-sm text-ink-500">{catalog.description}</p>
+                      ) : null}
                     </div>
-                    <span className="ms-auto font-medium text-accent-700">
-                      {tCommon('download')}
+
+                    <div className="col-start-2 flex flex-wrap items-center gap-4 lg:col-start-auto">
+                      {catalog.category ? <Tag>{catalog.category}</Tag> : null}
+                      {catalog.filesize ? (
+                        <span dir="ltr" className="label-mono">
+                          {Math.round(catalog.filesize / 1024)} KB
+                        </span>
+                      ) : null}
+                      <span className="label-mono">
+                        {format.dateTime(new Date(catalog.updatedAt), { dateStyle: 'medium' })}
+                      </span>
+                    </div>
+
+                    <span className="label-mono col-start-2 text-ember-400 lg:col-start-auto">
+                      {tCommon('download')} ↓
                     </span>
-                  </dl>
-                </a>
+                  </a>
+                </Reveal>
               </li>
             ))}
           </ul>

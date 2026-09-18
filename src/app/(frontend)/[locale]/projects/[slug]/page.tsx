@@ -9,11 +9,13 @@ import type { Locale } from '@/lib/i18n/config'
 import { buildMetadata } from '@/lib/seo/metadata'
 import { getProjectBySlug, getPublishedSlugs } from '@/lib/cms/queries'
 import { ogImageUrl, resolveMedia } from '@/lib/cms/media'
-import { PageHeader } from '@/components/shared/PageHeader'
-import { Section, SectionHeader } from '@/components/ui/Section'
+import { Container } from '@/components/ui/Container'
+import { Section, SectionHead } from '@/components/ui/Section'
+import { Breadcrumbs } from '@/components/shared/Breadcrumbs'
 import { RichText } from '@/components/shared/RichText'
 import { Gallery } from '@/components/shared/Gallery'
 import { SpecTable } from '@/components/shared/SpecTable'
+import { Reveal, RevealLines } from '@/components/motion/Reveal'
 import { ProductGrid } from '@/components/products/ProductGrid'
 
 type Props = { params: Promise<{ locale: string; slug: string }> }
@@ -46,6 +48,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   })
 }
 
+/**
+ * A project opens on the building itself, full bleed, with the title over it —
+ * then hands over to a facts rail and the write-up.
+ */
 export default async function ProjectPage({ params }: Props) {
   const { locale, slug } = await params
   if (!hasLocale(routing.locales, locale)) notFound()
@@ -87,45 +93,54 @@ export default async function ProjectPage({ params }: Props) {
 
   return (
     <>
-      <PageHeader
-        locale={typedLocale}
-        title={project.title}
-        subtitle={project.summary}
-        breadcrumbs={breadcrumbs}
-      />
+      <section className="relative isolate flex min-h-[85svh] flex-col justify-end overflow-hidden bg-ink-950">
+        {cover ? (
+          <Image
+            src={cover.url}
+            alt={cover.alt}
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover"
+          />
+        ) : null}
+        <div aria-hidden="true" className="media-scrim absolute inset-0" />
+
+        <Container className="relative pt-36 pb-16">
+          <Breadcrumbs locale={typedLocale} items={breadcrumbs} />
+          <h1 className="mt-10 max-w-4xl text-[clamp(2.25rem,6.5vw,5.5rem)] leading-[1.02]">
+            <RevealLines lines={[project.title]} />
+          </h1>
+          {project.summary ? (
+            <p className="mt-6 max-w-xl text-lg text-ink-200">{project.summary}</p>
+          ) : null}
+        </Container>
+      </section>
+
+      {/* Facts rail: the four things a visitor checks before reading anything. */}
+      {facts.length ? (
+        <div className="border-b border-white/10 bg-ink-900">
+          <Container>
+            <dl className="grid grid-cols-2 divide-white/10 md:grid-cols-4 md:divide-x rtl:md:divide-x-reverse">
+              {facts.map((fact) => (
+                <div key={fact.label} className="py-7 md:px-8 md:first:ps-0 md:last:pe-0">
+                  <dt className="label-mono">{fact.label}</dt>
+                  <dd className="mt-2 text-lg text-ink-50">{fact.value}</dd>
+                </div>
+              ))}
+            </dl>
+          </Container>
+        </div>
+      ) : null}
 
       <Section>
-        {cover ? (
-          <div className="relative aspect-16/9 overflow-hidden rounded-card bg-brand-100">
-            <Image
-              src={cover.url}
-              alt={cover.alt}
-              fill
-              priority
-              sizes="(min-width: 1024px) 72rem, 92vw"
-              className="object-cover"
-            />
-          </div>
-        ) : null}
+        <div className="grid gap-14 lg:grid-cols-[1.4fr_1fr] lg:gap-24">
+          <Reveal>{project.description ? <RichText data={project.description} /> : null}</Reveal>
 
-        <div className="mt-12 grid gap-12 lg:grid-cols-[3fr_2fr]">
-          <div>{project.description ? <RichText data={project.description} /> : null}</div>
-
-          <aside className="space-y-10">
-            {facts.length ? (
-              <dl className="divide-y divide-brand-100 rounded-card border border-brand-100">
-                {facts.map((fact) => (
-                  <div key={fact.label} className="flex justify-between gap-4 px-4 py-3 text-sm">
-                    <dt className="text-brand-500">{fact.label}</dt>
-                    <dd className="font-medium text-brand-800">{fact.value}</dd>
-                  </div>
-                ))}
-              </dl>
-            ) : null}
-
-            {project.technicalInfo?.length ? (
-              <div>
-                <h2 className="mb-4 text-xl font-semibold">{t('technicalInfo')}</h2>
+          {project.technicalInfo?.length ? (
+            <Reveal delay={0.1}>
+              <section className="lg:sticky lg:top-28 lg:self-start">
+                <h2 className="label-mono mb-6 text-ember-400">{t('technicalInfo')}</h2>
                 <SpecTable
                   rows={project.technicalInfo.map((row) => ({
                     label: row.label,
@@ -137,22 +152,22 @@ export default async function ProjectPage({ params }: Props) {
                     unit: tProducts('unit'),
                   }}
                 />
-              </div>
-            ) : null}
-          </aside>
+              </section>
+            </Reveal>
+          ) : null}
         </div>
       </Section>
 
       {galleryImages.length ? (
-        <Section tone="muted">
-          <SectionHeader title={tProducts('gallery')} />
+        <Section tone="raised" className="border-y border-white/10">
+          <SectionHead index="02" label={tProducts('gallery')} title={tProducts('gallery')} />
           <Gallery images={galleryImages} label={tProducts('gallery')} />
         </Section>
       ) : null}
 
       {productsUsed.length ? (
         <Section>
-          <SectionHeader title={t('productsUsed')} />
+          <SectionHead index="03" label={t('productsUsed')} title={t('productsUsed')} />
           <ProductGrid products={productsUsed} />
         </Section>
       ) : null}

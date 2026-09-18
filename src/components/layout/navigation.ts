@@ -1,16 +1,22 @@
 /**
- * The site's primary navigation.
+ * The site's navigation index.
  *
  * Kept in code rather than in the CMS: these routes exist as React components,
- * so an editor being able to delete or rename one would only ever produce a
+ * so an editor being able to rename or delete one would only ever produce a
  * broken link. Editorial pages live in the `pages` collection instead.
+ *
+ * Because navigation is a full-screen index rather than a bar, it can hold the
+ * whole site — there is no room pressure forcing pages into a "more" menu.
  */
 export const PRIMARY_NAV = [
-  { href: '/about', labelKey: 'about' },
   { href: '/products', labelKey: 'products' },
   { href: '/projects', labelKey: 'projects' },
-  { href: '/articles', labelKey: 'articles' },
   { href: '/quality', labelKey: 'quality' },
+  { href: '/about', labelKey: 'about' },
+  { href: '/articles', labelKey: 'articles' },
+  { href: '/catalogs', labelKey: 'catalogs' },
+  { href: '/sustainability', labelKey: 'sustainability' },
+  { href: '/careers', labelKey: 'careers' },
   { href: '/contact', labelKey: 'contact' },
 ] as const
 

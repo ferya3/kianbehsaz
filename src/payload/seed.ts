@@ -9,6 +9,7 @@
 import { getPayload } from 'payload'
 import config from '../payload.config'
 import type { Locale } from '../lib/i18n/config'
+import { renderTexture, type TextureKind } from './textures'
 
 type Translated = Record<Locale, string>
 
@@ -178,6 +179,144 @@ async function main() {
     payload.logger.info(`Created admin user ${adminEmail} (password: ChangeMe123!)`)
   }
 
+  /* ---------------------------------------------------------------- media */
+
+  /**
+   * Every image slot in this design is filled, because an empty one in a
+   * full-bleed dark layout reads as a mistake rather than as "no photo yet".
+   * The surfaces are generated (see textures.ts) — swap any of them for a real
+   * photograph from the admin panel and nothing in the code changes.
+   */
+  const mediaPlan: {
+    kind: TextureKind
+    alt: Translated
+    gallery?: 'factory' | 'products' | 'projects' | 'team'
+    width?: number
+    height?: number
+  }[] = [
+    {
+      kind: 'kiln',
+      alt: {
+        fa: 'دهانه کوره پخت در خط تولید',
+        en: 'The mouth of the firing kiln on the production line',
+        ar: 'فوهة فرن الحرق في خط الإنتاج',
+      },
+      gallery: 'factory',
+      width: 2600,
+      height: 1463,
+    },
+    {
+      kind: 'clay',
+      alt: {
+        fa: 'نمای نزدیک آجر نمای پخته',
+        en: 'Close-up of fired facade brick',
+        ar: 'لقطة قريبة لطوب الواجهة المحروق',
+      },
+      gallery: 'products',
+    },
+    {
+      kind: 'block',
+      alt: {
+        fa: 'بلوک‌های سازه‌ای چیده‌شده',
+        en: 'Stacked structural blocks',
+        ar: 'كتل إنشائية مرصوصة',
+      },
+      gallery: 'products',
+    },
+    {
+      kind: 'refractory',
+      alt: {
+        fa: 'آجر نسوز در دمای کاری',
+        en: 'Refractory brick at service temperature',
+        ar: 'طوب حراري في درجة التشغيل',
+      },
+      gallery: 'products',
+    },
+    {
+      kind: 'concrete',
+      alt: {
+        fa: 'سطح بتنی خط تولید',
+        en: 'Concrete surface on the production line',
+        ar: 'سطح خرساني في خط الإنتاج',
+      },
+      gallery: 'factory',
+    },
+    {
+      kind: 'facade',
+      alt: {
+        fa: 'نمای ماژولار ساختمان صنعتی',
+        en: 'Modular facade of an industrial building',
+        ar: 'واجهة معيارية لمبنى صناعي',
+      },
+      gallery: 'projects',
+    },
+    {
+      kind: 'tower',
+      alt: {
+        fa: 'برج اداری در شب',
+        en: 'Office tower at night',
+        ar: 'برج مكاتب ليلاً',
+      },
+      gallery: 'projects',
+    },
+    {
+      kind: 'lab',
+      alt: {
+        fa: 'آزمایشگاه کنترل کیفیت',
+        en: 'Quality control laboratory',
+        ar: 'مختبر ضبط الجودة',
+      },
+      gallery: 'factory',
+    },
+  ]
+
+  const mediaIds = {} as Record<TextureKind, number>
+
+  for (const item of mediaPlan) {
+    const filename = `${item.kind}.webp`
+    const existing = await payload.find({
+      collection: 'media',
+      where: { filename: { equals: filename } },
+      limit: 1,
+      depth: 0,
+    })
+
+    if (existing.docs[0]) {
+      mediaIds[item.kind] = existing.docs[0].id
+      continue
+    }
+
+    const buffer = await renderTexture(item.kind, { width: item.width, height: item.height })
+
+    const created = await payload.create({
+      collection: 'media',
+      locale: 'fa',
+      data: {
+        alt: item.alt.fa,
+        showInGallery: Boolean(item.gallery),
+        galleryCategory: item.gallery,
+      },
+      file: {
+        data: buffer,
+        mimetype: 'image/webp',
+        name: filename,
+        size: buffer.length,
+      },
+    })
+
+    for (const locale of ['en', 'ar'] as const) {
+      await payload.update({
+        collection: 'media',
+        id: created.id,
+        locale,
+        data: { alt: item.alt[locale] },
+      })
+    }
+
+    mediaIds[item.kind] = created.id
+    payload.logger.info(`Generated ${filename} (${Math.round(buffer.length / 1024)} KB)`)
+  }
+
   /* ----------------------------------------------------------- taxonomies */
 
   const productCategoryIds: Record<string, number> = {}
@@ -228,10 +367,18 @@ async function main() {
 
   /* ------------------------------------------------------------- products */
 
-  const products = [
+  const products: {
+    slug: string
+    category: string
+    media: TextureKind
+    title: Translated
+    short: Translated
+    specs: { label: Translated; value: string; unit: string }[]
+  }[] = [
     {
       slug: 'brick-x',
       category: 'facade-bricks',
+      media: 'clay',
       title: { fa: 'آجر نما X', en: 'Brick X', ar: 'طوب X' },
       short: {
         fa: 'آجر نمای فشرده با جذب آب کمتر از ۶ درصد.',
@@ -247,6 +394,7 @@ async function main() {
     {
       slug: 'block-s20',
       category: 'structural-blocks',
+      media: 'block',
       title: { fa: 'بلوک سازه‌ای S20', en: 'Structural block S20', ar: 'كتلة إنشائية S20' },
       short: {
         fa: 'بلوک باربر ۲۰ سانتی برای دیوارهای سازه‌ای.',
@@ -261,6 +409,7 @@ async function main() {
     {
       slug: 'refra-1400',
       category: 'refractory',
+      media: 'refractory',
       title: { fa: 'نسوز ۱۴۰۰', en: 'Refra 1400', ar: 'حراري 1400' },
       short: {
         fa: 'آجر نسوز با دمای کاری تا ۱۴۰۰ درجه سانتی‌گراد.',
@@ -293,6 +442,7 @@ async function main() {
           shortDescription: product.short[locale],
           description: richText(product.short[locale]),
           category: productCategoryIds[product.category],
+          coverImage: mediaIds[product.media],
           status: 'published',
           featured: true,
           sortOrder: index,
@@ -318,6 +468,7 @@ async function main() {
     {
       slug: 'shiraz-logistics-hub',
       category: 'industrial',
+      media: 'facade' as TextureKind,
       year: 2023,
       title: {
         fa: 'مرکز لجستیک شیراز',
@@ -334,6 +485,7 @@ async function main() {
     {
       slug: 'tehran-office-tower',
       category: 'commercial',
+      media: 'tower' as TextureKind,
       year: 2022,
       title: { fa: 'برج اداری تهران', en: 'Tehran office tower', ar: 'برج مكاتب طهران' },
       summary: {
@@ -357,6 +509,7 @@ async function main() {
           location: project.location[locale],
           year: project.year,
           category: projectCategoryIds[project.category],
+          coverImage: mediaIds[project.media],
           status: 'published',
           featured: true,
         },
@@ -371,6 +524,7 @@ async function main() {
     {
       slug: 'choosing-facade-brick',
       category: 'technology',
+      media: 'clay' as TextureKind,
       title: {
         fa: 'چگونه آجر نمای مناسب را انتخاب کنیم',
         en: 'How to choose the right facade brick',
@@ -385,6 +539,7 @@ async function main() {
     {
       slug: 'quality-control-in-practice',
       category: 'industry',
+      media: 'lab' as TextureKind,
       title: {
         fa: 'کنترل کیفیت در عمل',
         en: 'Quality control in practice',
@@ -408,6 +563,7 @@ async function main() {
           excerpt: article.excerpt[locale],
           content: richText(article.excerpt[locale]),
           category: articleCategoryIds[article.category],
+          coverImage: mediaIds[article.media],
           status: 'published',
           readingMinutes: 4,
         },
@@ -473,6 +629,53 @@ async function main() {
       emailIds = await globalRowIds('site-settings', 'emails')
       statIds = await globalRowIds('site-settings', 'stats')
     }
+  }
+
+  // Hero and intro imagery. The hero holds the only bright thing on the page,
+  // so it gets the kiln.
+  for (const locale of LOCALES) {
+    await payload.updateGlobal({
+      slug: 'home-page',
+      locale,
+      data: {
+        hero: {
+          title: {
+            fa: 'مصالحی که بار را می‌پذیرد',
+            en: 'Material that takes the load',
+            ar: 'مواد تتحمل الحِمل',
+          }[locale],
+          subtitle: {
+            fa: 'دو دهه تولید مصالح مهندسی‌شده برای پروژه‌های صنعتی، تجاری و زیرساختی. هر بچ آزمون می‌شود، هر عدد قابل اثبات است.',
+            en: 'Two decades of engineered building materials for industrial, commercial and infrastructure projects. Every batch tested, every figure provable.',
+            ar: 'عقدان من إنتاج مواد البناء الهندسية للمشاريع الصناعية والتجارية والبنية التحتية. كل دفعة تُختبر، وكل رقم قابل للإثبات.',
+          }[locale],
+          desktopMedia: mediaIds.kiln,
+          mobileImage: mediaIds.kiln,
+          overlayOpacity: 40,
+          primaryCta: {
+            label: { fa: 'محصولات', en: 'Products', ar: 'المنتجات' }[locale],
+            href: '/products',
+          },
+          secondaryCta: {
+            label: { fa: 'گفت‌وگو با تیم فنی', en: 'Talk to the engineers', ar: 'تحدث مع الفريق الفني' }[locale],
+            href: '/contact',
+          },
+        },
+        intro: {
+          title: {
+            fa: 'کیفیت وقتی معنا دارد که تکرارپذیر باشد',
+            en: 'Quality only counts when it repeats',
+            ar: 'الجودة لا تُحتسب إلا إذا تكررت',
+          }[locale],
+          body: {
+            fa: 'یک بچ خوب تصادف است. چهارصد بچ پشت سر هم، فرایند است. کنترل کیفیت ما از ورود مواد اولیه شروع می‌شود و تا گزارش آزمونی که همراه محموله تحویل می‌دهیم ادامه دارد.',
+            en: 'One good batch is an accident. Four hundred consecutive batches is a process. Our quality control starts at the raw material gate and ends with the test report that ships with the pallet.',
+            ar: 'دفعة جيدة واحدة مصادفة. أربعمائة دفعة متتالية عملية. يبدأ ضبط الجودة لدينا عند بوابة المواد الأولية وينتهي بتقرير الاختبار المرافق للشحنة.',
+          }[locale],
+          image: mediaIds.concrete,
+        },
+      },
+    })
   }
 
   payload.logger.info('Seed complete.')

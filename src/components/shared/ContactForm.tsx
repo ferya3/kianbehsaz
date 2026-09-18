@@ -83,7 +83,7 @@ export function ContactForm({ locale }: { locale: Locale }) {
   const errorFor = (field: string) => (errors[field] ? tValidation(errors[field]) : undefined)
 
   return (
-    <form onSubmit={onSubmit} noValidate className="relative space-y-6">
+    <form onSubmit={onSubmit} noValidate className="relative space-y-8">
       <Honeypot />
 
       <div className="grid gap-6 md:grid-cols-2">
@@ -161,7 +161,7 @@ export function ContactForm({ locale }: { locale: Locale }) {
         />
       </Field>
 
-      <p className="text-xs text-brand-500">{t('consent')}</p>
+      <p className="text-xs text-ink-500">{t('consent')}</p>
 
       <div className="flex flex-wrap items-center gap-4">
         <Button type="submit" disabled={status === 'submitting'}>
@@ -169,10 +169,10 @@ export function ContactForm({ locale }: { locale: Locale }) {
         </Button>
 
         <p aria-live="polite" className="text-sm">
-          {status === 'success' ? <span className="text-accent-700">{t('success')}</span> : null}
-          {status === 'error' ? <span className="text-accent-700">{t('error')}</span> : null}
+          {status === 'success' ? <span className="text-ember-300">{t('success')}</span> : null}
+          {status === 'error' ? <span className="text-ember-300">{t('error')}</span> : null}
           {status === 'rateLimited' ? (
-            <span className="text-accent-700">{t('rateLimited')}</span>
+            <span className="text-ember-300">{t('rateLimited')}</span>
           ) : null}
         </p>
       </div>

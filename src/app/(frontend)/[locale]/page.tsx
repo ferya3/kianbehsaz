@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
 import { hasLocale } from 'next-intl'
-import { getTranslations, setRequestLocale } from 'next-intl/server'
+import { setRequestLocale } from 'next-intl/server'
 
 import { routing } from '@/lib/i18n/routing'
 import type { Locale } from '@/lib/i18n/config'
@@ -11,18 +11,15 @@ import {
   getProjects,
   getSiteSettings,
 } from '@/lib/cms/queries'
-import { resolveMedia } from '@/lib/cms/media'
-import { Section, SectionHeader } from '@/components/ui/Section'
-import { Button } from '@/components/ui/Button'
 import { Hero } from '@/components/home/Hero'
-import { Stats } from '@/components/home/Stats'
-import { FeatureSplit } from '@/components/home/FeatureSplit'
-import { Capabilities } from '@/components/home/Capabilities'
+import { Marquee } from '@/components/home/Marquee'
+import { Manifesto } from '@/components/home/Manifesto'
+import { Figures } from '@/components/home/Figures'
+import { ProductRail } from '@/components/products/ProductRail'
+import { ProjectsSection } from '@/components/home/ProjectsSection'
+import { Process } from '@/components/home/Process'
+import { Journal } from '@/components/home/Journal'
 import { CtaBanner } from '@/components/home/CtaBanner'
-import { ProductGrid } from '@/components/products/ProductGrid'
-import { ProjectGrid } from '@/components/projects/ProjectGrid'
-import { ArticleGrid } from '@/components/articles/ArticleGrid'
-import { EmptyState } from '@/components/shared/EmptyState'
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }))
@@ -31,6 +28,11 @@ export function generateStaticParams() {
 /** Rebuilt on demand by the CMS hooks; this is only the safety net. */
 export const revalidate = 600
 
+/**
+ * The homepage is a sequence, not a stack of blocks: an opening frame, a held
+ * statement, the figures behind it, the products, the work, the process, the
+ * writing, and one closing surface. Each numbered chapter appears once.
+ */
 export default async function HomePageRoute({
   params,
 }: {
@@ -42,116 +44,32 @@ export default async function HomePageRoute({
 
   const typedLocale = locale as Locale
 
-  const [t, tCommon, home, settings, products, projects, articles] = await Promise.all([
-    getTranslations({ locale, namespace: 'Home' }),
-    getTranslations({ locale, namespace: 'Common' }),
+  const [home, settings, products, projects, articles] = await Promise.all([
     getHomePage(typedLocale),
     getSiteSettings(typedLocale),
-    getProducts(typedLocale, { featured: true, limit: 6 }),
-    getProjects(typedLocale, { featured: true, limit: 3 }),
+    getProducts(typedLocale, { featured: true, limit: 8 }),
+    getProjects(typedLocale, { featured: true, limit: 5 }),
     getArticles(typedLocale, { limit: 3 }),
   ])
 
   const sections = home?.sections
   const show = (key: keyof NonNullable<typeof sections>) => sections?.[key] !== false
-  const introImage = resolveMedia(home?.intro?.image, 'wide')
 
   return (
     <>
-      <Hero locale={typedLocale} home={home} />
+      <Hero locale={typedLocale} home={home} products={products.docs} />
+      <Marquee locale={typedLocale} />
 
-      {show('showIntro') ? (
-        <FeatureSplit
-          eyebrow={t('introEyebrow')}
-          title={home?.intro?.title || t('introTitle')}
-          body={home?.intro?.body || t('introBody')}
-          imageUrl={introImage?.url}
-          imageAlt={introImage?.alt}
-        >
-          <Button href="/about" variant="ghost">
-            {tCommon('readMore')}
-          </Button>
-        </FeatureSplit>
-      ) : null}
-
-      {show('showStats') ? <Stats locale={typedLocale} settings={settings} /> : null}
-
+      {show('showIntro') ? <Manifesto locale={typedLocale} home={home} /> : null}
+      {show('showStats') ? <Figures locale={typedLocale} settings={settings} /> : null}
       {show('showProducts') ? (
-        <Section>
-          <SectionHeader
-            eyebrow={t('productsEyebrow')}
-            title={t('productsTitle')}
-            body={t('productsBody')}
-            action={
-              <Button href="/products" variant="ghost">
-                {tCommon('viewAll')}
-              </Button>
-            }
-          />
-          {products.docs.length ? (
-            <ProductGrid products={products.docs} />
-          ) : (
-            <EmptyState message={tCommon('empty')} />
-          )}
-        </Section>
+        <ProductRail locale={typedLocale} products={products.docs} />
       ) : null}
-
       {show('showProjects') ? (
-        <Section tone="muted">
-          <SectionHeader
-            eyebrow={t('projectsEyebrow')}
-            title={t('projectsTitle')}
-            body={t('projectsBody')}
-            action={
-              <Button href="/projects" variant="ghost">
-                {tCommon('viewAll')}
-              </Button>
-            }
-          />
-          {projects.docs.length ? (
-            <ProjectGrid projects={projects.docs} />
-          ) : (
-            <EmptyState message={tCommon('empty')} />
-          )}
-        </Section>
+        <ProjectsSection locale={typedLocale} projects={projects.docs} />
       ) : null}
-
-      {show('showProduction') ? <Capabilities locale={typedLocale} /> : null}
-
-      {show('showSustainability') ? (
-        <Section>
-          <SectionHeader
-            eyebrow={t('sustainabilityEyebrow')}
-            title={t('sustainabilityTitle')}
-            body={t('sustainabilityBody')}
-            action={
-              <Button href="/sustainability" variant="ghost">
-                {tCommon('readMore')}
-              </Button>
-            }
-          />
-        </Section>
-      ) : null}
-
-      {show('showArticles') ? (
-        <Section tone="muted">
-          <SectionHeader
-            eyebrow={t('articlesEyebrow')}
-            title={t('articlesTitle')}
-            body={t('articlesBody')}
-            action={
-              <Button href="/articles" variant="ghost">
-                {tCommon('viewAll')}
-              </Button>
-            }
-          />
-          {articles.docs.length ? (
-            <ArticleGrid locale={typedLocale} articles={articles.docs} />
-          ) : (
-            <EmptyState message={tCommon('empty')} />
-          )}
-        </Section>
-      ) : null}
+      {show('showQuality') ? <Process locale={typedLocale} /> : null}
+      {show('showArticles') ? <Journal locale={typedLocale} articles={articles.docs} /> : null}
 
       <CtaBanner locale={typedLocale} />
     </>

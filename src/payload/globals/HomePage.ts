@@ -37,7 +37,7 @@ export const HomePage: GlobalConfig = {
           type: 'number',
           min: 0,
           max: 100,
-          defaultValue: 55,
+          defaultValue: 40,
           admin: { description: 'Percentage of dark overlay, for text contrast.' },
         },
         {

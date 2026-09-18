@@ -1,5 +1,5 @@
 import type { Media } from '@/payload-types'
-import { mediaUrl } from '@/lib/utils/url'
+import { absoluteMediaUrl, mediaUrl } from '@/lib/utils/url'
 
 export type ResolvedMedia = {
   url: string
@@ -33,7 +33,11 @@ export function resolveMedia(
   }
 }
 
-/** Convenience for OpenGraph, which wants an absolute URL or nothing. */
+/**
+ * The same image as an absolute URL, for OpenGraph and JSON-LD — which are
+ * read off-site, where the relative path `resolveMedia` returns is useless.
+ */
 export function ogImageUrl(value: MediaField): string | undefined {
-  return resolveMedia(value, 'og')?.url ?? resolveMedia(value)?.url
+  const resolved = resolveMedia(value, 'og') ?? resolveMedia(value)
+  return absoluteMediaUrl(resolved?.url)
 }

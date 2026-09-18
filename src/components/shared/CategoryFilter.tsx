@@ -25,10 +25,10 @@ export function CategoryFilter({
               href={option.href}
               aria-current={option.active ? 'page' : undefined}
               className={cn(
-                'inline-flex items-center rounded-pill px-4 py-2 text-sm font-medium transition-colors',
+                'inline-flex items-center border px-4 py-2 text-sm font-medium transition-colors',
                 option.active
-                  ? 'bg-brand-900 text-white'
-                  : 'border border-brand-200 text-brand-700 hover:bg-brand-50',
+                  ? 'border-ink-50 bg-ink-50 text-ink-950'
+                  : 'border-white/15 text-ink-300 hover:border-white/50 hover:text-ink-50',
               )}
             >
               {option.label}

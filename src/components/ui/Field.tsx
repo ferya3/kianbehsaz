@@ -1,10 +1,16 @@
 import type { ComponentProps, ReactNode } from 'react'
 import { cn } from '@/lib/utils/cn'
 
+/**
+ * Inputs are a rule with text on it, not a box.
+ *
+ * On a dark page a bordered box reads as a hole; an underline keeps the form
+ * feeling like part of the page and puts all the emphasis on what was typed.
+ */
 const control =
-  'w-full rounded-card border border-brand-200 bg-surface px-4 py-3 text-brand-900 ' +
-  'placeholder:text-brand-400 focus:border-accent-500 focus:outline-none ' +
-  'focus:ring-2 focus:ring-accent-500/25 disabled:bg-brand-50 aria-invalid:border-accent-600'
+  'w-full border-0 border-b border-white/20 bg-transparent px-0 py-3 text-ink-50 ' +
+  'placeholder:text-ink-500 transition-colors focus:border-ember-400 focus:outline-none ' +
+  'disabled:opacity-50 aria-invalid:border-ember-500'
 
 export function Field({
   id,
@@ -22,15 +28,15 @@ export function Field({
   children: ReactNode
 }) {
   return (
-    <div className="flex flex-col gap-2">
-      <label htmlFor={id} className="text-sm font-medium text-brand-800">
+    <div className="flex flex-col gap-1">
+      <label htmlFor={id} className="label-mono">
         {label}
-        {required ? <span className="text-accent-600"> *</span> : null}
-        {hint ? <span className="ms-1 text-xs font-normal text-brand-400">({hint})</span> : null}
+        {required ? <span className="text-ember-400"> *</span> : null}
+        {hint ? <span className="ms-2 normal-case text-ink-500">({hint})</span> : null}
       </label>
       {children}
       {error ? (
-        <p id={`${id}-error`} className="text-sm text-accent-700">
+        <p id={`${id}-error`} className="mt-1 text-sm text-ember-300">
           {error}
         </p>
       ) : null}
@@ -43,13 +49,13 @@ export function Input({ className, ...props }: ComponentProps<'input'>) {
 }
 
 export function Textarea({ className, ...props }: ComponentProps<'textarea'>) {
-  return <textarea className={cn(control, 'min-h-36 resize-y', className)} {...props} />
+  return <textarea className={cn(control, 'min-h-32 resize-y', className)} {...props} />
 }
 
 /**
  * A hidden field that real users never fill in. Requests that arrive with it
- * populated are dropped server-side — cheap spam filtering that costs no
- * third-party script and no accessibility trade-off.
+ * populated are answered 200 and dropped server-side — cheap spam filtering
+ * that costs no third-party script and no accessibility trade-off.
  */
 export function Honeypot({ name = 'website' }: { name?: string }) {
   return (

@@ -1,7 +1,8 @@
 import { getTranslations } from 'next-intl/server'
 import type { Locale } from '@/lib/i18n/config'
 import { getProjectCategories, getProjects } from '@/lib/cms/queries'
-import { PageHeader } from '@/components/shared/PageHeader'
+import { resolveMedia } from '@/lib/cms/media'
+import { PageHero } from '@/components/shared/PageHero'
 import { Section } from '@/components/ui/Section'
 import { CategoryFilter } from '@/components/shared/CategoryFilter'
 import { EmptyState } from '@/components/shared/EmptyState'
@@ -32,13 +33,20 @@ export async function ProjectsListing({
   const breadcrumbs = [{ name: tNav('projects'), href: '/projects' }]
   if (activeCategory) breadcrumbs.push({ name: activeCategory.title, href: basePath })
 
+  const heroImage =
+    resolveMedia(activeCategory?.image, 'wide') ??
+    resolveMedia(result.docs[0]?.coverImage, 'wide')
+
   return (
     <>
-      <PageHeader
+      <PageHero
         locale={locale}
+        index="02"
         title={activeCategory?.title ?? t('title')}
         subtitle={activeCategory?.description ?? t('subtitle')}
         breadcrumbs={breadcrumbs}
+        imageUrl={heroImage?.url}
+        imageAlt={heroImage?.alt}
       >
         <CategoryFilter
           label={t('category')}
@@ -51,12 +59,12 @@ export async function ProjectsListing({
             })),
           ]}
         />
-      </PageHeader>
+      </PageHero>
 
       <Section>
         {result.docs.length ? (
           <>
-            <ProjectGrid projects={result.docs} priorityCount={3} />
+            <ProjectGrid locale={locale} projects={result.docs} />
             <Pagination
               locale={locale}
               basePath={basePath}

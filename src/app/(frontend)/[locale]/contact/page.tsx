@@ -7,15 +7,18 @@ import { routing } from '@/lib/i18n/routing'
 import type { Locale } from '@/lib/i18n/config'
 import { buildMetadata } from '@/lib/seo/metadata'
 import { getSiteSettings } from '@/lib/cms/queries'
-import { PageHeader } from '@/components/shared/PageHeader'
-import { Section } from '@/components/ui/Section'
+import { Container } from '@/components/ui/Container'
+import { Breadcrumbs } from '@/components/shared/Breadcrumbs'
 import { ContactForm } from '@/components/shared/ContactForm'
+import { RevealLines } from '@/components/motion/Reveal'
 
 type Props = { params: Promise<{ locale: string }> }
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }))
 }
+
+export const revalidate = 3600
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params
@@ -33,6 +36,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   })
 }
 
+/**
+ * Contact is one screen, split: the details on one side, the form on the
+ * other, with no page header above them. The page opens straight into the ask.
+ */
 export default async function ContactPage({ params }: Props) {
   const { locale } = await params
   if (!hasLocale(routing.locales, locale)) notFound()
@@ -45,92 +52,70 @@ export default async function ContactPage({ params }: Props) {
     getSiteSettings(typedLocale),
   ])
 
+  const details = [
+    { label: t('addressTitle'), value: settings?.address, dir: undefined },
+    {
+      label: t('phoneTitle'),
+      value: settings?.phones?.map((phone) => phone.number).join('\n'),
+      dir: 'ltr' as const,
+      href: settings?.phones?.[0] ? `tel:${settings.phones[0].number}` : undefined,
+    },
+    {
+      label: t('emailTitle'),
+      value: settings?.emails?.map((email) => email.address).join('\n'),
+      dir: 'ltr' as const,
+      href: settings?.emails?.[0] ? `mailto:${settings.emails[0].address}` : undefined,
+    },
+    { label: t('hoursTitle'), value: settings?.openingHours, dir: undefined },
+  ].filter((detail): detail is typeof detail & { value: string } => Boolean(detail.value))
+
   return (
-    <>
-      <PageHeader
-        locale={typedLocale}
-        title={t('title')}
-        subtitle={t('subtitle')}
-        breadcrumbs={[{ name: tNav('contact'), href: '/contact' }]}
-      />
+    <Container className="pt-36 pb-section md:pt-44">
+      <Breadcrumbs locale={typedLocale} items={[{ name: tNav('contact'), href: '/contact' }]} />
 
-      <Section>
-        <div className="grid gap-12 lg:grid-cols-[3fr_2fr]">
-          <div>
-            <h2 className="text-2xl font-semibold">{t('formTitle')}</h2>
-            <div className="mt-8">
-              <ContactForm locale={typedLocale} />
-            </div>
-          </div>
+      <div className="mt-10 grid gap-16 lg:grid-cols-[1fr_1.15fr] lg:gap-24">
+        <div className="lg:sticky lg:top-28 lg:self-start">
+          <h1 className="text-[clamp(2.5rem,6.5vw,5rem)] leading-[1.02]">
+            <RevealLines lines={[t('title')]} />
+          </h1>
+          <p className="mt-6 max-w-md text-lg text-ink-300">{t('subtitle')}</p>
 
-          <aside className="space-y-8">
-            {settings?.address ? (
-              <div>
-                <h2 className="text-sm font-semibold tracking-wide text-brand-500 uppercase">
-                  {t('addressTitle')}
-                </h2>
-                <p className="mt-2 text-brand-800">{settings.address}</p>
+          <dl className="mt-14">
+            {details.map((detail) => (
+              <div key={detail.label} className="rule-hairline py-5">
+                <dt className="label-mono">{detail.label}</dt>
+                <dd dir={detail.dir} className="mt-2 whitespace-pre-line text-ink-100">
+                  {detail.href ? (
+                    <a
+                      href={detail.href}
+                      className="font-mono transition-colors hover:text-ember-300"
+                    >
+                      {detail.value}
+                    </a>
+                  ) : (
+                    detail.value
+                  )}
+                </dd>
               </div>
-            ) : null}
+            ))}
+          </dl>
 
-            {settings?.phones?.length ? (
-              <div>
-                <h2 className="text-sm font-semibold tracking-wide text-brand-500 uppercase">
-                  {t('phoneTitle')}
-                </h2>
-                <ul className="mt-2 space-y-1">
-                  {settings.phones.map((phone) => (
-                    <li key={phone.id ?? phone.number}>
-                      <a href={`tel:${phone.number}`} dir="ltr" className="text-brand-800">
-                        {phone.number}
-                      </a>
-                      {phone.label ? (
-                        <span className="ms-2 text-sm text-brand-500">{phone.label}</span>
-                      ) : null}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ) : null}
-
-            {settings?.emails?.length ? (
-              <div>
-                <h2 className="text-sm font-semibold tracking-wide text-brand-500 uppercase">
-                  {t('emailTitle')}
-                </h2>
-                <ul className="mt-2 space-y-1">
-                  {settings.emails.map((email) => (
-                    <li key={email.id ?? email.address}>
-                      <a href={`mailto:${email.address}`} dir="ltr" className="text-brand-800">
-                        {email.address}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ) : null}
-
-            {settings?.openingHours ? (
-              <div>
-                <h2 className="text-sm font-semibold tracking-wide text-brand-500 uppercase">
-                  {t('hoursTitle')}
-                </h2>
-                <p className="mt-2 text-brand-800">{settings.openingHours}</p>
-              </div>
-            ) : null}
-
-            {settings?.mapEmbedUrl ? (
-              <iframe
-                src={settings.mapEmbedUrl}
-                title={t('addressTitle')}
-                loading="lazy"
-                referrerPolicy="no-referrer-when-downgrade"
-                className="aspect-4/3 w-full rounded-card border border-brand-100"
-              />
-            ) : null}
-          </aside>
+          {settings?.mapEmbedUrl ? (
+            <iframe
+              src={settings.mapEmbedUrl}
+              title={t('addressTitle')}
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+              className="mt-10 aspect-4/3 w-full border border-white/10 grayscale"
+            />
+          ) : null}
         </div>
-      </Section>
-    </>
+
+        <div className="border-t border-white/10 pt-10 lg:border-0 lg:pt-0">
+          <h2 className="label-mono mb-10 text-ember-400">{t('formTitle')}</h2>
+          <ContactForm locale={typedLocale} />
+        </div>
+      </div>
+    </Container>
   )
 }

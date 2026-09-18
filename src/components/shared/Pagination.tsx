@@ -34,7 +34,7 @@ export async function Pagination({
             <Link
               href={href(page - 1)}
               rel="prev"
-              className="rounded-pill border border-brand-200 px-4 py-2 text-sm hover:bg-brand-50"
+              className="border border-white/15 px-4 py-2 text-sm text-ink-300 transition-colors hover:border-white/50 hover:text-ink-50"
             >
               {t('previous')}
             </Link>
@@ -47,10 +47,10 @@ export async function Pagination({
               href={href(target)}
               aria-current={target === page ? 'page' : undefined}
               className={cn(
-                'inline-flex h-10 min-w-10 items-center justify-center rounded-pill px-3 text-sm',
+                'inline-flex h-10 min-w-10 items-center justify-center px-3 font-mono text-sm transition-colors',
                 target === page
-                  ? 'bg-brand-900 text-white'
-                  : 'border border-brand-200 text-brand-700 hover:bg-brand-50',
+                  ? 'bg-ink-50 text-ink-950'
+                  : 'border border-white/15 text-ink-300 hover:border-white/50 hover:text-ink-50',
               )}
             >
               {target}
@@ -63,7 +63,7 @@ export async function Pagination({
             <Link
               href={href(page + 1)}
               rel="next"
-              className="rounded-pill border border-brand-200 px-4 py-2 text-sm hover:bg-brand-50"
+              className="border border-white/15 px-4 py-2 text-sm text-ink-300 transition-colors hover:border-white/50 hover:text-ink-50"
             >
               {t('next')}
             </Link>

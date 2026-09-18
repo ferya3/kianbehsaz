@@ -7,11 +7,12 @@ import { routing } from '@/lib/i18n/routing'
 import type { Locale } from '@/lib/i18n/config'
 import { buildMetadata } from '@/lib/seo/metadata'
 import { getCareers, getSiteSettings } from '@/lib/cms/queries'
-import { PageHeader } from '@/components/shared/PageHeader'
-import { Section, SectionHeader } from '@/components/ui/Section'
+import { PageHero } from '@/components/shared/PageHero'
+import { Section, SectionHead } from '@/components/ui/Section'
 import { EmptyState } from '@/components/shared/EmptyState'
-import { Badge } from '@/components/ui/Badge'
+import { Tag } from '@/components/ui/Tag'
 import { Button } from '@/components/ui/Button'
+import { Reveal } from '@/components/motion/Reveal'
 
 type Props = { params: Promise<{ locale: string }> }
 
@@ -55,8 +56,9 @@ export default async function CareersPage({ params }: Props) {
 
   return (
     <>
-      <PageHeader
+      <PageHero
         locale={typedLocale}
+        index="08"
         title={t('title')}
         subtitle={careers?.intro || t('subtitle')}
         breadcrumbs={[{ name: tNav('careers'), href: '/careers' }]}
@@ -66,42 +68,40 @@ export default async function CareersPage({ params }: Props) {
             {t('apply')}
           </Button>
         ) : null}
-      </PageHeader>
+      </PageHero>
 
       <Section>
-        <SectionHeader title={t('openPositions')} />
+        <SectionHead index="09" label={t('openPositions')} title={t('openPositions')} />
 
         {openPositions.length ? (
-          <ul className="space-y-4">
-            {openPositions.map((position) => (
+          <ul>
+            {openPositions.map((position, index) => (
               <li
                 key={position.id ?? position.title}
-                className="rounded-card border border-brand-100 bg-surface p-6"
+                className="rule-hairline last:border-b last:border-white/10"
               >
-                <div className="flex flex-wrap items-start justify-between gap-4">
-                  <div>
-                    <h3 className="text-lg font-semibold text-brand-900">{position.title}</h3>
-                    <p className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-sm text-brand-500">
-                      {position.department ? (
-                        <span>
-                          {t('department')}: {position.department}
-                        </span>
-                      ) : null}
-                      {position.location ? (
-                        <span>
-                          {t('location')}: {position.location}
-                        </span>
-                      ) : null}
-                    </p>
-                  </div>
-                  {position.employmentType ? (
-                    <Badge tone="accent">{position.employmentType}</Badge>
-                  ) : null}
-                </div>
+                <Reveal delay={Math.min(index, 5) * 0.05}>
+                  <div className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-4 py-8 lg:grid-cols-[auto_1fr_auto]">
+                    <span className="label-mono">{String(index + 1).padStart(2, '0')}</span>
 
-                {position.description ? (
-                  <p className="mt-4 text-brand-600">{position.description}</p>
-                ) : null}
+                    <div>
+                      <h3 className="text-2xl font-semibold text-ink-50">{position.title}</h3>
+                      <p className="label-mono mt-3 flex flex-wrap gap-x-6 gap-y-1">
+                        {position.department ? <span>{position.department}</span> : null}
+                        {position.location ? <span>{position.location}</span> : null}
+                      </p>
+                      {position.description ? (
+                        <p className="mt-4 max-w-2xl text-ink-400">{position.description}</p>
+                      ) : null}
+                    </div>
+
+                    {position.employmentType ? (
+                      <div className="col-start-2 lg:col-start-auto">
+                        <Tag tone="ember">{position.employmentType}</Tag>
+                      </div>
+                    ) : null}
+                  </div>
+                </Reveal>
               </li>
             ))}
           </ul>

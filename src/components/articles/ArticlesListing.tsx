@@ -1,7 +1,7 @@
 import { getTranslations } from 'next-intl/server'
 import type { Locale } from '@/lib/i18n/config'
 import { getArticleCategories, getArticles } from '@/lib/cms/queries'
-import { PageHeader } from '@/components/shared/PageHeader'
+import { PageHero } from '@/components/shared/PageHero'
 import { Section } from '@/components/ui/Section'
 import { CategoryFilter } from '@/components/shared/CategoryFilter'
 import { EmptyState } from '@/components/shared/EmptyState'
@@ -34,8 +34,9 @@ export async function ArticlesListing({
 
   return (
     <>
-      <PageHeader
+      <PageHero
         locale={locale}
+        index="05"
         title={activeCategory?.title ?? t('title')}
         subtitle={activeCategory?.description ?? t('subtitle')}
         breadcrumbs={breadcrumbs}
@@ -51,7 +52,7 @@ export async function ArticlesListing({
             })),
           ]}
         />
-      </PageHeader>
+      </PageHero>
 
       <Section>
         {result.docs.length ? (

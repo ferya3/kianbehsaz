@@ -3,28 +3,38 @@ import type { ReactNode } from 'react'
 import { notFound } from 'next/navigation'
 import { NextIntlClientProvider, hasLocale } from 'next-intl'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
-import { Vazirmatn } from 'next/font/google'
+import { IBM_Plex_Mono, IBM_Plex_Sans_Arabic } from 'next/font/google'
 
 import '@/styles/globals.css'
 
 import { routing } from '@/lib/i18n/routing'
 import { getDirection, localeHrefLang, type Locale } from '@/lib/i18n/config'
 import { getSiteSettings } from '@/lib/cms/queries'
-import { Header } from '@/components/layout/Header'
-import { Footer } from '@/components/layout/Footer'
+import { SiteHeader } from '@/components/layout/SiteHeader'
+import { SiteFooter } from '@/components/layout/SiteFooter'
 import { JsonLd } from '@/components/shared/JsonLd'
 import { organizationJsonLd, websiteJsonLd } from '@/lib/seo/jsonLd'
 import { buildAlternates } from '@/lib/seo/metadata'
-import { getSiteUrl, mediaUrl } from '@/lib/utils/url'
+import { absoluteMediaUrl, getSiteUrl } from '@/lib/utils/url'
 
 /**
- * Vazirmatn covers Persian, Arabic and Latin in one family, so a language
- * switch does not swap typeface — and there is only one font to download.
+ * One family across Persian, Arabic and Latin, so switching language never
+ * switches typeface. Plex Arabic holds its shape at display sizes, which this
+ * layout leans on heavily.
  */
-const vazirmatn = Vazirmatn({
+const plexArabic = IBM_Plex_Sans_Arabic({
   subsets: ['arabic', 'latin'],
+  weight: ['300', '400', '500', '600', '700'],
   display: 'swap',
   variable: '--font-app-sans',
+})
+
+/** Latin only: figures, units, indices. Never Persian body text. */
+const plexMono = IBM_Plex_Mono({
+  subsets: ['latin'],
+  weight: ['400', '500'],
+  display: 'swap',
+  variable: '--font-app-mono',
 })
 
 export function generateStaticParams() {
@@ -48,18 +58,17 @@ export async function generateMetadata({
   return {
     metadataBase: new URL(getSiteUrl()),
     title: {
-      default: `${name} | ${settings?.tagline || t('tagline')}`,
-      template: `%s | ${name}`,
+      default: `${name} — ${settings?.tagline || t('tagline')}`,
+      template: `%s — ${name}`,
     },
     description,
     applicationName: name,
     alternates: buildAlternates(locale, '/'),
-    openGraph: {
-      type: 'website',
-      siteName: name,
-      locale: localeHrefLang[locale],
-    },
+    openGraph: { type: 'website', siteName: name, locale: localeHrefLang[locale] },
     formatDetection: { telephone: false },
+    // Matches the page background, so the browser chrome on mobile does not
+    // sit as a white band above a black site.
+    themeColor: '#08090a',
   }
 }
 
@@ -73,7 +82,7 @@ export default async function LocaleLayout({
   const { locale } = await params
   if (!hasLocale(routing.locales, locale)) notFound()
 
-  // Required for static rendering: without it every page under this layout
+  // Required for static rendering: without it, every page under this layout
   // opts into dynamic rendering the first time it reads a translation.
   setRequestLocale(locale)
 
@@ -85,33 +94,39 @@ export default async function LocaleLayout({
   ])
 
   const siteName = settings?.siteName || t('name')
+  // Rendered nowhere in this layout — it only feeds the Organization schema,
+  // which is read off-site and therefore needs an absolute URL.
   const logo =
-    settings?.logo && typeof settings.logo === 'object' ? mediaUrl(settings.logo.url) : undefined
+    settings?.logo && typeof settings.logo === 'object'
+      ? absoluteMediaUrl(settings.logo.url)
+      : undefined
 
   return (
     <html
       lang={localeHrefLang[typedLocale]}
       dir={getDirection(typedLocale)}
-      className={vazirmatn.variable}
+      className={`${plexArabic.variable} ${plexMono.variable}`}
       suppressHydrationWarning
     >
-      <body className="flex min-h-dvh flex-col bg-surface antialiased">
+      <body className="bg-ink-950 text-ink-100">
         <NextIntlClientProvider>
           <a
             href="#main"
-            className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:m-4 focus:rounded-card focus:bg-brand-900 focus:px-4 focus:py-2 focus:text-white"
+            className="sr-only focus:not-sr-only focus:absolute focus:z-[110] focus:m-4 focus:bg-ember-500 focus:px-4 focus:py-2 focus:text-white"
           >
             {tCommon('skipToContent')}
           </a>
 
-          <Header locale={typedLocale} settings={settings} />
+          <SiteHeader locale={typedLocale} settings={settings} />
 
-          <main id="main" className="flex-1">
-            {children}
-          </main>
+          <main id="main">{children}</main>
 
-          <Footer locale={typedLocale} settings={settings} />
+          <SiteFooter locale={typedLocale} settings={settings} />
         </NextIntlClientProvider>
+
+        {/* One fixed grain layer over the whole page: it never scrolls with the
+            content and costs a single composite. */}
+        <div aria-hidden="true" className="grain-overlay" />
 
         <JsonLd
           data={[

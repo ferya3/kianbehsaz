@@ -53,7 +53,7 @@ export function Modal({
         if (event.target === ref.current) onClose()
       }}
       className={cn(
-        'w-[min(48rem,92vw)] rounded-card p-0 shadow-raised backdrop:bg-brand-950/70',
+        'w-[min(64rem,94vw)] bg-ink-950 p-0 text-ink-100 backdrop:bg-ink-950/90 backdrop:backdrop-blur-sm',
         className,
       )}
     >

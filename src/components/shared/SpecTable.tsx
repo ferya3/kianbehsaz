@@ -17,32 +17,32 @@ export function SpecTable({
   const hasUnits = rows.some((row) => row.unit)
 
   return (
-    <div className="overflow-x-auto rounded-card border border-brand-100">
-      <table className="w-full text-start text-sm">
-        <thead className="bg-surface-muted text-brand-600">
+    <div className="overflow-x-auto border-t border-white/10">
+      <table className="tabular w-full text-start text-sm">
+        <thead className="text-ink-500">
           <tr>
-            <th scope="col" className="px-4 py-3 text-start font-medium">
+            <th scope="col" className="label-mono py-3 pe-6 text-start">
               {labels.property}
             </th>
-            <th scope="col" className="px-4 py-3 text-start font-medium">
+            <th scope="col" className="label-mono py-3 pe-6 text-start">
               {labels.value}
             </th>
             {hasUnits ? (
-              <th scope="col" className="px-4 py-3 text-start font-medium">
+              <th scope="col" className="label-mono py-3 pe-6 text-start">
                 {labels.unit}
               </th>
             ) : null}
           </tr>
         </thead>
-        <tbody className="divide-y divide-brand-100">
+        <tbody className="divide-y divide-white/10">
           {rows.map((row, index) => (
             <tr key={`${row.label}-${index}`}>
-              <th scope="row" className="px-4 py-3 text-start font-medium text-brand-800">
+              <th scope="row" className="py-4 pe-6 text-start font-medium text-ink-200">
                 {row.label}
               </th>
-              <td className="px-4 py-3 text-brand-700">{row.value}</td>
+              <td className="py-4 pe-6 font-mono text-ink-50">{row.value}</td>
               {hasUnits ? (
-                <td className="px-4 py-3 text-brand-500" dir="ltr">
+                <td className="py-4 font-mono text-ink-500" dir="ltr">
                   {row.unit ?? '—'}
                 </td>
               ) : null}

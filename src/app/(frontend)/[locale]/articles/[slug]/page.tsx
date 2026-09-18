@@ -8,14 +8,20 @@ import { routing } from '@/lib/i18n/routing'
 import type { Locale } from '@/lib/i18n/config'
 import { buildMetadata } from '@/lib/seo/metadata'
 import { articleJsonLd } from '@/lib/seo/jsonLd'
-import { getArticleBySlug, getArticles, getPublishedSlugs, getSiteSettings } from '@/lib/cms/queries'
+import {
+  getArticleBySlug,
+  getArticles,
+  getPublishedSlugs,
+  getSiteSettings,
+} from '@/lib/cms/queries'
 import { ogImageUrl, resolveMedia } from '@/lib/cms/media'
 import { Container } from '@/components/ui/Container'
-import { Section, SectionHeader } from '@/components/ui/Section'
+import { Section, SectionHead } from '@/components/ui/Section'
 import { Breadcrumbs } from '@/components/shared/Breadcrumbs'
 import { RichText } from '@/components/shared/RichText'
 import { JsonLd } from '@/components/shared/JsonLd'
-import { Badge } from '@/components/ui/Badge'
+import { Tag } from '@/components/ui/Tag'
+import { RevealLines } from '@/components/motion/Reveal'
 import { ArticleGrid } from '@/components/articles/ArticleGrid'
 
 type Props = { params: Promise<{ locale: string; slug: string }> }
@@ -81,16 +87,23 @@ export default async function ArticlePage({ params }: Props) {
   return (
     <>
       <article>
-        <Container className="py-12 md:py-16">
+        <Container className="pt-36 pb-12 md:pt-44">
           <Breadcrumbs locale={typedLocale} items={breadcrumbs} />
 
-          <header className="mx-auto mt-6 max-w-3xl">
-            {category ? <Badge tone="accent">{category.title}</Badge> : null}
-            <h1 className="mt-4 text-3xl font-semibold text-brand-900 md:text-5xl">
-              {article.title}
+          <header className="mt-10 max-w-4xl">
+            {category ? <p className="label-mono text-ember-400">{category.title}</p> : null}
+
+            <h1 className="mt-5 text-[clamp(2rem,5.5vw,4.5rem)] leading-[1.04]">
+              <RevealLines lines={[article.title]} />
             </h1>
 
-            <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-brand-500">
+            {article.excerpt ? (
+              <p className="mt-8 max-w-2xl text-xl text-ink-300">{article.excerpt}</p>
+            ) : null}
+
+            {/* One mono line rather than a labelled table: three short facts
+                do not need three headings. */}
+            <p className="rule-hairline label-mono mt-10 flex flex-wrap items-center gap-x-6 gap-y-2 pt-5">
               {article.publishedAt ? (
                 <time dateTime={article.publishedAt}>
                   {t('publishedOn', {
@@ -106,34 +119,34 @@ export default async function ArticlePage({ params }: Props) {
               {article.readingMinutes ? (
                 <span>{t('readingTime', { minutes: article.readingMinutes })}</span>
               ) : null}
-            </div>
-
-            {article.excerpt ? (
-              <p className="mt-6 text-lg text-brand-600">{article.excerpt}</p>
-            ) : null}
+            </p>
           </header>
+        </Container>
 
-          {cover ? (
-            <div className="relative mx-auto mt-10 aspect-16/9 max-w-4xl overflow-hidden rounded-card bg-brand-100">
-              <Image
-                src={cover.url}
-                alt={cover.alt}
-                fill
-                priority
-                sizes="(min-width: 1024px) 56rem, 92vw"
-                className="object-cover"
-              />
-            </div>
-          ) : null}
+        {cover ? (
+          <div className="relative aspect-21/9 w-full overflow-hidden bg-ink-800">
+            <Image
+              src={cover.url}
+              alt={cover.alt}
+              fill
+              priority
+              sizes="100vw"
+              className="object-cover"
+            />
+          </div>
+        ) : null}
 
-          <div className="mx-auto mt-12 max-w-3xl">
+        <Container className="py-section">
+          {/* Measure capped well below the container: long-form Persian is
+              unreadable at the full width this layout otherwise uses. */}
+          <div className="mx-auto max-w-2xl">
             <RichText data={article.content} />
 
             {article.tags?.length ? (
-              <div className="mt-10 flex flex-wrap items-center gap-2">
-                <span className="text-sm text-brand-500">{t('tags')}:</span>
+              <div className="rule-hairline mt-14 flex flex-wrap items-center gap-2 pt-6">
+                <span className="label-mono me-2">{t('tags')}</span>
                 {article.tags.map((tag) => (
-                  <Badge key={tag.id ?? tag.label}>{tag.label}</Badge>
+                  <Tag key={tag.id ?? tag.label}>{tag.label}</Tag>
                 ))}
               </div>
             ) : null}
@@ -142,8 +155,8 @@ export default async function ArticlePage({ params }: Props) {
       </article>
 
       {related.docs.length ? (
-        <Section tone="muted">
-          <SectionHeader title={t('related')} />
+        <Section tone="raised" className="border-t border-white/10">
+          <SectionHead index="06" label={t('related')} title={t('related')} />
           <ArticleGrid locale={typedLocale} articles={related.docs} />
         </Section>
       ) : null}

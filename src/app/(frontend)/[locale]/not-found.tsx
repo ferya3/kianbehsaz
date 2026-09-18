@@ -6,15 +6,17 @@ export default function LocaleNotFound() {
   const t = useTranslations('NotFound')
 
   return (
-    <Container className="flex min-h-[50vh] flex-col items-center justify-center py-24 text-center">
-      <p className="font-display text-6xl font-semibold text-accent-500" dir="ltr">
+    <Container className="flex min-h-[80svh] flex-col justify-center py-32">
+      <p dir="ltr" className="font-display text-[clamp(5rem,20vw,16rem)] leading-none font-semibold text-ink-800">
         404
       </p>
-      <h1 className="mt-6 text-3xl font-semibold text-brand-900">{t('title')}</h1>
-      <p className="mt-4 max-w-md text-brand-600">{t('body')}</p>
-      <Button href="/" className="mt-8">
-        {t('cta')}
-      </Button>
+      <h1 className="mt-8 text-[clamp(1.75rem,4vw,3rem)]">{t('title')}</h1>
+      <p className="mt-5 max-w-md text-ink-400">{t('body')}</p>
+      <div className="mt-12">
+        <Button href="/" size="lg">
+          {t('cta')}
+        </Button>
+      </div>
     </Container>
   )
 }

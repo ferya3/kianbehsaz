@@ -28,7 +28,7 @@ export function Gallery({ images, label }: { images: GalleryImage[]; label: stri
             <button
               type="button"
               onClick={() => setActiveIndex(index)}
-              className="group relative block aspect-4/3 w-full overflow-hidden rounded-card bg-brand-100"
+              className="group relative block aspect-4/3 w-full overflow-hidden bg-ink-800"
             >
               <Image
                 src={image.url}
@@ -36,7 +36,7 @@ export function Gallery({ images, label }: { images: GalleryImage[]; label: stri
                 fill
                 sizes="(min-width: 768px) 20rem, 45vw"
                 loading="lazy"
-                className="object-cover transition-transform duration-500 group-hover:scale-105"
+                className="object-cover transition-transform duration-700 ease-[var(--ease-out-expo)] group-hover:scale-[1.05]"
               />
             </button>
           </li>
@@ -45,7 +45,7 @@ export function Gallery({ images, label }: { images: GalleryImage[]; label: stri
 
       <Modal open={active !== null} onClose={() => setActiveIndex(null)} label={label}>
         {active ? (
-          <figure className="bg-brand-950">
+          <figure className="bg-ink-950">
             <div className="relative aspect-video w-full">
               <Image
                 src={active.url}
@@ -55,12 +55,12 @@ export function Gallery({ images, label }: { images: GalleryImage[]; label: stri
                 className="object-contain"
               />
             </div>
-            <figcaption className="flex items-center justify-between gap-4 px-4 py-3 text-sm text-brand-200">
+            <figcaption className="flex items-center justify-between gap-4 px-5 py-4 text-sm text-ink-300">
               <span>{active.caption ?? active.alt}</span>
               <button
                 type="button"
                 onClick={() => setActiveIndex(null)}
-                className="rounded-pill border border-white/30 px-3 py-1 text-white"
+                className="label-mono border border-white/30 px-3 py-1 text-white"
               >
                 {t('close')}
               </button>

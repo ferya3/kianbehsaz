@@ -2,92 +2,81 @@ import type { ReactNode } from 'react'
 import { cn } from '@/lib/utils/cn'
 import { Container } from './Container'
 
-type Tone = 'default' | 'muted' | 'inverse'
+type Tone = 'base' | 'raised' | 'ember'
 
 const tones: Record<Tone, string> = {
-  default: 'bg-surface text-brand-900',
-  muted: 'bg-surface-muted text-brand-900',
-  inverse: 'bg-brand-950 text-brand-50',
+  base: 'bg-ink-950',
+  // Lifted by a few percent rather than by a border, so the seam is felt but
+  // not drawn.
+  raised: 'bg-ink-900',
+  ember: 'bg-ember-600 text-white',
 }
 
-/**
- * The vertical rhythm of the whole site lives here. Pages compose Sections
- * instead of setting their own padding, which is what keeps the page from
- * drifting into a dozen slightly different gaps.
- */
 export function Section({
   id,
-  tone = 'default',
+  tone = 'base',
   size = 'md',
+  bleed = false,
   className,
   containerClassName,
   children,
 }: {
   id?: string
   tone?: Tone
-  size?: 'md' | 'lg'
+  size?: 'sm' | 'md' | 'lg'
+  /** Skip the container: the section manages its own edges. */
+  bleed?: boolean
   className?: string
   containerClassName?: string
   children: ReactNode
 }) {
+  const padding =
+    size === 'lg' ? 'py-section-lg' : size === 'sm' ? 'py-20' : 'py-section'
+
   return (
-    <section
-      id={id}
-      className={cn(
-        tones[tone],
-        size === 'lg' ? 'py-section-lg' : 'py-section',
-        className,
-      )}
-    >
-      <Container className={containerClassName}>{children}</Container>
+    <section id={id} className={cn(tones[tone], padding, className)}>
+      {bleed ? children : <Container className={containerClassName}>{children}</Container>}
     </section>
   )
 }
 
-/** Eyebrow + title + optional lead paragraph, used at the top of a Section. */
-export function SectionHeader({
-  eyebrow,
+/**
+ * Section heading: a mono index and label on one hairline, the title below it.
+ *
+ * The index is what makes a long dark page navigable — you always know which
+ * of eight chapters you are in.
+ */
+export function SectionHead({
+  index,
+  label,
   title,
   body,
-  align = 'start',
-  tone = 'default',
   action,
+  className,
 }: {
-  eyebrow?: string
+  /** Two-digit chapter number, e.g. "03". */
+  index?: string
+  label?: string
   title: string
   body?: string
-  align?: 'start' | 'center'
-  tone?: Tone
   action?: ReactNode
+  className?: string
 }) {
-  const inverse = tone === 'inverse'
-
   return (
-    <div
-      className={cn(
-        'mb-12 flex flex-col gap-6 md:flex-row md:items-end md:justify-between',
-        align === 'center' && 'items-center text-center md:flex-col md:items-center',
+    <header className={cn('mb-14 md:mb-20', className)}>
+      {(index || label) && (
+        <div className="rule-hairline flex items-baseline gap-4 pt-4">
+          {index ? <span className="label-mono text-ember-400">{index}</span> : null}
+          {label ? <span className="label-mono">{label}</span> : null}
+        </div>
       )}
-    >
-      <div className={cn('max-w-2xl', align === 'center' && 'mx-auto')}>
-        {eyebrow ? (
-          <p
-            className={cn(
-              'mb-3 text-sm font-medium tracking-wide uppercase',
-              inverse ? 'text-accent-300' : 'text-accent-600',
-            )}
-          >
-            {eyebrow}
-          </p>
-        ) : null}
-        <h2 className="text-3xl font-semibold md:text-4xl">{title}</h2>
-        {body ? (
-          <p className={cn('mt-4 text-lg', inverse ? 'text-brand-200' : 'text-brand-600')}>
-            {body}
-          </p>
-        ) : null}
+
+      <div className="mt-8 flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
+        <h2 className="max-w-3xl text-[clamp(2rem,4.4vw,3.75rem)]">{title}</h2>
+        {action ? <div className="shrink-0">{action}</div> : null}
       </div>
-      {action ? <div className="shrink-0">{action}</div> : null}
-    </div>
+
+      {body ? <p className="mt-6 max-w-xl text-lg text-ink-300">{body}</p> : null}
+    </header>
   )
 }

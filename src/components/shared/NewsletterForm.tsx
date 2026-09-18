@@ -31,10 +31,9 @@ export function NewsletterForm({ locale }: { locale: Locale }) {
 
   return (
     <form onSubmit={onSubmit} noValidate>
-      <h3 className="text-sm font-semibold tracking-wide text-white uppercase">{t('title')}</h3>
-      <p className="mt-2 text-sm text-brand-300">{t('body')}</p>
+      <h3 className="label-mono">{t('title')}</h3>
 
-      <div className="mt-3 flex gap-2">
+      <div className="mt-4 flex items-center gap-3 border-b border-white/20 focus-within:border-ember-400">
         <label htmlFor="newsletter-email" className="sr-only">
           {t('placeholder')}
         </label>
@@ -47,20 +46,21 @@ export function NewsletterForm({ locale }: { locale: Locale }) {
           value={email}
           onChange={(event) => setEmail(event.target.value)}
           placeholder={t('placeholder')}
-          className="min-w-0 flex-1 rounded-pill border border-white/20 bg-white/5 px-4 py-2 text-sm text-white placeholder:text-brand-400 focus:border-accent-400 focus:outline-none"
+          className="min-w-0 flex-1 bg-transparent py-2 font-mono text-sm text-ink-50 placeholder:text-ink-500 focus:outline-none"
         />
         <button
           type="submit"
           disabled={state === 'submitting'}
-          className="rounded-pill bg-accent-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-accent-700 disabled:opacity-60"
+          aria-label={t('submit')}
+          className="shrink-0 py-2 text-ink-300 transition-colors hover:text-ember-400 disabled:opacity-50 rtl:rotate-180"
         >
-          {t('submit')}
+          →
         </button>
       </div>
 
       <p aria-live="polite" className="mt-2 min-h-5 text-xs">
-        {state === 'success' ? <span className="text-accent-300">{t('success')}</span> : null}
-        {state === 'error' ? <span className="text-accent-400">{t('error')}</span> : null}
+        {state === 'success' ? <span className="text-ember-300">{t('success')}</span> : null}
+        {state === 'error' ? <span className="text-ember-400">{t('error')}</span> : null}
       </p>
     </form>
   )

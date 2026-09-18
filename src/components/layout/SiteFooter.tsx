@@ -6,7 +6,14 @@ import { Container } from '@/components/ui/Container'
 import { NewsletterForm } from '@/components/shared/NewsletterForm'
 import { FOOTER_NAV } from './navigation'
 
-export async function Footer({
+/**
+ * The footer closes the page with the company's name at display size.
+ *
+ * On a dark site the footer is not a dumping ground — it is the last frame, so
+ * it gets the same treatment as the hero: one huge piece of type, a hairline,
+ * and the practical details underneath it.
+ */
+export async function SiteFooter({
   locale,
   settings,
 }: {
@@ -23,24 +30,24 @@ export async function Footer({
   const year = new Date().getFullYear()
 
   return (
-    <footer className="bg-brand-950 text-brand-200">
-      <Container className="py-16">
-        <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-4">
+    <footer className="border-t border-white/10 bg-ink-950">
+      <Container className="pt-20 pb-10">
+        <div className="grid gap-14 lg:grid-cols-[1.4fr_1fr_1fr_1.2fr]">
           <div>
-            <h2 className="font-display text-lg font-semibold text-white">{siteName}</h2>
-            <p className="mt-3 text-sm leading-relaxed text-brand-300">
+            <h2 className="font-display text-3xl font-semibold text-ink-50">{siteName}</h2>
+            <p className="mt-4 max-w-xs text-sm leading-relaxed text-ink-400">
               {settings?.tagline || t('companyBody')}
             </p>
 
             {settings?.social?.length ? (
-              <ul className="mt-5 flex flex-wrap gap-3">
+              <ul className="mt-8 flex flex-wrap gap-2">
                 {settings.social.map((profile) => (
                   <li key={profile.id ?? profile.url}>
                     <a
                       href={profile.url}
                       target="_blank"
                       rel="noopener noreferrer me"
-                      className="rounded-pill border border-white/20 px-3 py-1 text-xs capitalize text-brand-200 transition-colors hover:border-white/50 hover:text-white"
+                      className="label-mono border border-white/15 px-3 py-1.5 transition-colors hover:border-white/50 hover:text-ink-50"
                     >
                       {profile.platform}
                     </a>
@@ -51,13 +58,14 @@ export async function Footer({
           </div>
 
           <nav aria-label={t('quickLinks')}>
-            <h2 className="text-sm font-semibold tracking-wide text-white uppercase">
-              {t('quickLinks')}
-            </h2>
-            <ul className="mt-4 space-y-2 text-sm">
+            <h3 className="label-mono">{t('quickLinks')}</h3>
+            <ul className="mt-5 space-y-3 text-sm">
               {FOOTER_NAV.company.map((item) => (
                 <li key={item.href}>
-                  <Link href={item.href} className="transition-colors hover:text-white">
+                  <Link
+                    href={item.href}
+                    className="text-ink-300 transition-colors hover:text-ink-50"
+                  >
                     {tNav(item.labelKey)}
                   </Link>
                 </li>
@@ -66,13 +74,14 @@ export async function Footer({
           </nav>
 
           <nav aria-label={t('resources')}>
-            <h2 className="text-sm font-semibold tracking-wide text-white uppercase">
-              {t('resources')}
-            </h2>
-            <ul className="mt-4 space-y-2 text-sm">
+            <h3 className="label-mono">{t('resources')}</h3>
+            <ul className="mt-5 space-y-3 text-sm">
               {FOOTER_NAV.resources.map((item) => (
                 <li key={item.href}>
-                  <Link href={item.href} className="transition-colors hover:text-white">
+                  <Link
+                    href={item.href}
+                    className="text-ink-300 transition-colors hover:text-ink-50"
+                  >
                     {tNav(item.labelKey)}
                   </Link>
                 </li>
@@ -81,42 +90,49 @@ export async function Footer({
           </nav>
 
           <div>
-            <h2 className="text-sm font-semibold tracking-wide text-white uppercase">
-              {t('contactTitle')}
-            </h2>
-            <address className="mt-4 space-y-2 text-sm not-italic">
+            <h3 className="label-mono">{t('contactTitle')}</h3>
+            <address className="mt-5 space-y-2 text-sm not-italic text-ink-300">
               {settings?.address ? <p>{settings.address}</p> : null}
               {settings?.phones?.map((phone) => (
                 <p key={phone.id ?? phone.number}>
-                  <a href={`tel:${phone.number}`} dir="ltr" className="hover:text-white">
+                  <a
+                    href={`tel:${phone.number}`}
+                    dir="ltr"
+                    className="font-mono transition-colors hover:text-ink-50"
+                  >
                     {phone.number}
                   </a>
                 </p>
               ))}
               {settings?.emails?.map((email) => (
                 <p key={email.id ?? email.address}>
-                  <a href={`mailto:${email.address}`} dir="ltr" className="hover:text-white">
+                  <a
+                    href={`mailto:${email.address}`}
+                    dir="ltr"
+                    className="font-mono transition-colors hover:text-ink-50"
+                  >
                     {email.address}
                   </a>
                 </p>
               ))}
             </address>
 
-            <div className="mt-6">
+            <div className="mt-8">
               <NewsletterForm locale={locale} />
             </div>
           </div>
         </div>
 
-        <div className="mt-12 flex flex-col gap-4 border-t border-white/10 pt-6 text-xs text-brand-400 sm:flex-row sm:items-center sm:justify-between">
-          <p>
-            © {year} {siteName}. {t('rights')}
+        <div className="rule-hairline mt-16 flex flex-col gap-4 pt-6 text-xs text-ink-500 sm:flex-row sm:items-center sm:justify-between">
+          <p className="font-mono" dir="ltr">
+            © {year} {siteName}
           </p>
-          <div className="flex gap-4">
-            <Link href="/privacy" className="hover:text-white">
+          <p>{t('rights')}</p>
+          <div className="flex gap-6">
+            <Link href="/privacy" className="transition-colors hover:text-ink-200">
               {t('privacy')}
             </Link>
-            <Link href="/terms" className="hover:text-white">
+            <Link href="/terms" className="transition-colors hover:text-ink-200">
               {t('terms')}
             </Link>
           </div>

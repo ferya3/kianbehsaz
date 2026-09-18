@@ -45,10 +45,10 @@ export function LocaleSwitcher({ className }: { className?: string }) {
               })
             }}
             className={cn(
-              'rounded-pill px-2.5 py-1 text-xs font-medium transition-colors',
+              'px-3 py-1.5 text-xs font-medium transition-colors',
               active
-                ? 'bg-brand-900 text-white'
-                : 'text-brand-600 hover:bg-brand-100 disabled:opacity-50',
+                ? 'bg-ink-50 text-ink-950'
+                : 'text-ink-400 hover:text-ink-50 disabled:opacity-50',
             )}
           >
             {localeLabels[locale]}

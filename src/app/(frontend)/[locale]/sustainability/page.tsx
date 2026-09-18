@@ -6,8 +6,9 @@ import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { routing } from '@/lib/i18n/routing'
 import type { Locale } from '@/lib/i18n/config'
 import { buildMetadata } from '@/lib/seo/metadata'
-import { PageHeader } from '@/components/shared/PageHeader'
+import { PageHero } from '@/components/shared/PageHero'
 import { Section } from '@/components/ui/Section'
+import { Reveal } from '@/components/motion/Reveal'
 
 type Props = { params: Promise<{ locale: string }> }
 
@@ -51,25 +52,28 @@ export default async function SustainabilityPage({ params }: Props) {
 
   return (
     <>
-      <PageHeader
+      <PageHero
         locale={typedLocale}
+        index="07"
         title={t('title')}
         subtitle={t('subtitle')}
         breadcrumbs={[{ name: tNav('sustainability'), href: '/sustainability' }]}
       />
 
       <Section>
-        <div className="grid gap-6 md:grid-cols-2">
-          {pillars.map((pillar) => (
-            <article
-              key={pillar.title}
-              className="rounded-card border border-brand-100 bg-surface p-8"
-            >
-              <h2 className="text-xl font-semibold text-brand-900">{pillar.title}</h2>
-              <p className="mt-3 text-brand-600">{pillar.body}</p>
-            </article>
+        <ul className="grid gap-x-12 gap-y-16 md:grid-cols-2">
+          {pillars.map((pillar, index) => (
+            <Reveal key={pillar.title} delay={(index % 2) * 0.08}>
+              <li className="rule-hairline pt-6">
+                <span dir="ltr" className="label-mono text-ember-400">
+                  {String(index + 1).padStart(2, '0')}
+                </span>
+                <h2 className="mt-5 text-3xl font-semibold text-ink-50">{pillar.title}</h2>
+                <p className="mt-4 max-w-md text-ink-400">{pillar.body}</p>
+              </li>
+            </Reveal>
           ))}
-        </div>
+        </ul>
       </Section>
     </>
   )

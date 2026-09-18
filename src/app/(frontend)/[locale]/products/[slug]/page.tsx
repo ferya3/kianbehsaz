@@ -10,13 +10,15 @@ import { buildMetadata } from '@/lib/seo/metadata'
 import { productJsonLd } from '@/lib/seo/jsonLd'
 import { getProductBySlug, getPublishedSlugs, getSiteSettings } from '@/lib/cms/queries'
 import { ogImageUrl, resolveMedia } from '@/lib/cms/media'
-import { PageHeader } from '@/components/shared/PageHeader'
-import { Section, SectionHeader } from '@/components/ui/Section'
+import { Container } from '@/components/ui/Container'
+import { Section, SectionHead } from '@/components/ui/Section'
+import { Button } from '@/components/ui/Button'
+import { Breadcrumbs } from '@/components/shared/Breadcrumbs'
 import { RichText } from '@/components/shared/RichText'
 import { SpecTable } from '@/components/shared/SpecTable'
 import { Gallery } from '@/components/shared/Gallery'
 import { JsonLd } from '@/components/shared/JsonLd'
-import { Button } from '@/components/ui/Button'
+import { Reveal, RevealLines } from '@/components/motion/Reveal'
 import { ProductGrid } from '@/components/products/ProductGrid'
 
 type Props = { params: Promise<{ locale: string; slug: string }> }
@@ -50,6 +52,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   })
 }
 
+/**
+ * A product page reads as a technical dossier rather than as a shop listing.
+ *
+ * The image is a tall column that sticks while the specification, applications
+ * and downloads scroll past it — the engineer keeps the material in view while
+ * reading its numbers.
+ */
 export default async function ProductPage({ params }: Props) {
   const { locale, slug } = await params
   if (!hasLocale(routing.locales, locale)) notFound()
@@ -89,108 +98,133 @@ export default async function ProductPage({ params }: Props) {
 
   const breadcrumbs = [{ name: tNav('products'), href: '/products' }]
   if (category) {
-    breadcrumbs.push({
-      name: category.title,
-      href: `/products/category/${category.slug}`,
-    })
+    breadcrumbs.push({ name: category.title, href: `/products/category/${category.slug}` })
   }
   breadcrumbs.push({ name: product.title, href: `/products/${product.slug}` })
 
   return (
     <>
-      <PageHeader
-        locale={typedLocale}
-        title={product.title}
-        subtitle={product.shortDescription}
-        breadcrumbs={breadcrumbs}
-      >
-        <Button href="/contact">{t('requestQuote')}</Button>
-      </PageHeader>
+      <Container className="pt-36 pb-16 md:pt-44">
+        <Breadcrumbs locale={typedLocale} items={breadcrumbs} />
 
-      <Section>
-        <div className="grid gap-12 lg:grid-cols-[3fr_2fr]">
+        <div className="mt-10 grid gap-10 lg:grid-cols-[1fr_auto] lg:items-end">
           <div>
+            {category ? <p className="label-mono text-ember-400">{category.title}</p> : null}
+            <h1 className="mt-4 max-w-3xl text-[clamp(2.5rem,6.5vw,5.5rem)] leading-[1]">
+              <RevealLines lines={[product.title]} />
+            </h1>
+            {product.shortDescription ? (
+              <p className="mt-6 max-w-xl text-lg text-ink-300">{product.shortDescription}</p>
+            ) : null}
+          </div>
+
+          <Button href="/contact" size="lg">
+            {t('requestQuote')}
+          </Button>
+        </div>
+      </Container>
+
+      <Container className="pb-section">
+        <div className="grid gap-14 lg:grid-cols-[1fr_1fr] lg:gap-20">
+          {/* Sticky media column: the material stays in view while the numbers
+              scroll past it. */}
+          <div className="lg:sticky lg:top-28 lg:self-start">
             {cover ? (
-              <div className="relative aspect-16/10 overflow-hidden rounded-card bg-brand-100">
+              <div className="relative aspect-4/5 overflow-hidden bg-ink-800">
                 <Image
                   src={cover.url}
                   alt={cover.alt}
                   fill
                   priority
-                  sizes="(min-width: 1024px) 44rem, 92vw"
+                  sizes="(min-width: 1024px) 46vw, 92vw"
                   className="object-cover"
                 />
               </div>
             ) : null}
-
-            {product.description ? (
-              <RichText data={product.description} className="mt-10" />
-            ) : null}
           </div>
 
-          <aside className="space-y-10">
+          <div className="space-y-16">
             {specs.length ? (
-              <div>
-                <h2 className="mb-4 text-xl font-semibold">{t('specifications')}</h2>
-                <SpecTable
-                  rows={specs}
-                  labels={{ property: t('property'), value: t('value'), unit: t('unit') }}
-                />
-              </div>
+              <Reveal>
+                <section>
+                  <h2 className="label-mono mb-6 text-ember-400">{t('specifications')}</h2>
+                  <SpecTable
+                    rows={specs}
+                    labels={{ property: t('property'), value: t('value'), unit: t('unit') }}
+                  />
+                </section>
+              </Reveal>
+            ) : null}
+
+            {product.description ? (
+              <Reveal>
+                <RichText data={product.description} />
+              </Reveal>
             ) : null}
 
             {product.applications?.length ? (
-              <div>
-                <h2 className="mb-4 text-xl font-semibold">{t('applications')}</h2>
-                <ul className="space-y-3">
-                  {product.applications.map((application) => (
-                    <li
-                      key={application.id ?? application.title}
-                      className="rounded-card border border-brand-100 p-4"
-                    >
-                      <p className="font-medium text-brand-800">{application.title}</p>
-                      {application.description ? (
-                        <p className="mt-1 text-sm text-brand-600">{application.description}</p>
-                      ) : null}
-                    </li>
-                  ))}
-                </ul>
-              </div>
+              <Reveal>
+                <section>
+                  <h2 className="label-mono mb-6 text-ember-400">{t('applications')}</h2>
+                  <ul>
+                    {product.applications.map((application, index) => (
+                      <li
+                        key={application.id ?? application.title}
+                        className="rule-hairline flex gap-6 py-5"
+                      >
+                        <span className="label-mono shrink-0">
+                          {String(index + 1).padStart(2, '0')}
+                        </span>
+                        <div>
+                          <p className="font-medium text-ink-100">{application.title}</p>
+                          {application.description ? (
+                            <p className="mt-1 text-sm text-ink-400">{application.description}</p>
+                          ) : null}
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              </Reveal>
             ) : null}
 
             {downloads.length ? (
-              <div>
-                <h2 className="mb-4 text-xl font-semibold">{t('downloads')}</h2>
-                <ul className="space-y-2">
-                  {downloads.map((file) => (
-                    <li key={file.id}>
-                      <a
-                        href={file.url ?? '#'}
-                        download
-                        className="flex items-center justify-between rounded-card border border-brand-100 px-4 py-3 text-sm transition-colors hover:bg-brand-50"
-                      >
-                        <span>{file.title}</span>
-                        <span className="text-accent-700">{tCommon('download')}</span>
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+              <Reveal>
+                <section>
+                  <h2 className="label-mono mb-6 text-ember-400">{t('downloads')}</h2>
+                  <ul>
+                    {downloads.map((file) => (
+                      <li key={file.id} className="rule-hairline">
+                        <a
+                          href={file.url ?? '#'}
+                          download
+                          className="group flex items-center justify-between gap-6 py-5 text-sm"
+                        >
+                          <span className="text-ink-200 transition-colors group-hover:text-ink-50">
+                            {file.title}
+                          </span>
+                          <span className="label-mono text-ember-400">{tCommon('download')}</span>
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              </Reveal>
             ) : null}
-          </aside>
+          </div>
         </div>
-      </Section>
+      </Container>
 
       {galleryImages.length ? (
-        <Section tone="muted">
-          <SectionHeader title={t('gallery')} />
+        <Section tone="raised" className="border-y border-white/10">
+          <SectionHead index="02" label={t('gallery')} title={t('gallery')} />
           <Gallery images={galleryImages} label={t('gallery')} />
         </Section>
       ) : null}
 
       {related.length ? (
         <Section>
-          <SectionHeader title={t('relatedProducts')} />
+          <SectionHead index="03" label={t('relatedProducts')} title={t('relatedProducts')} />
           <ProductGrid products={related} />
         </Section>
       ) : null}

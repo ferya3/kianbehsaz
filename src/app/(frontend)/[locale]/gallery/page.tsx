@@ -8,7 +8,7 @@ import type { Locale } from '@/lib/i18n/config'
 import { buildMetadata } from '@/lib/seo/metadata'
 import { getGalleryImages } from '@/lib/cms/queries'
 import { resolveMedia } from '@/lib/cms/media'
-import { PageHeader } from '@/components/shared/PageHeader'
+import { PageHero } from '@/components/shared/PageHero'
 import { Section } from '@/components/ui/Section'
 import { Gallery } from '@/components/shared/Gallery'
 import { EmptyState } from '@/components/shared/EmptyState'
@@ -58,8 +58,9 @@ export default async function GalleryPage({ params }: Props) {
 
   return (
     <>
-      <PageHeader
+      <PageHero
         locale={typedLocale}
+        index="10"
         title={t('title')}
         subtitle={t('subtitle')}
         breadcrumbs={[{ name: tNav('gallery'), href: '/gallery' }]}
